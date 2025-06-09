@@ -12,13 +12,15 @@
 
 declare(strict_types=1);
 
+define('PHAST_BASE_PATH', dirname(__DIR__));
 // 1. Registrar el autoloader de Composer
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once PHAST_BASE_PATH . '/vendor/autoload.php';
+
 
 // 2. Crear una instancia de la aplicación
 // La aplicación se encargará de cargar el entorno, los servicios y las rutas.
 $app = new Phast\System\Core\Application(
-   dirname(__DIR__)
+   PHAST_BASE_PATH
 );
 
 

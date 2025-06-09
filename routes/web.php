@@ -1,24 +1,12 @@
 <?php
-
-/**
- * @package     http/phast
- * @subpackage  routes
- * @file        web
- * @author      Fernando Castillo <nando.castillo@outlook.com>
- * @date        2025-06-09 00:12:47
- * @version     1.0.0
- * @description
- */
-
+// routes/web.php
 declare(strict_types=1);
 
 use Phast\System\Core\Container;
 use Phast\System\Http\Request;
 use Phast\System\Http\Response;
-use Phast\System\Routing\Router;
+use Phast\System\Routing\Facades\Router;
 
-$router = Container::getInstance()->resolve(Router::class);
-
-$router->get('/', function (Request $req, Response $res) {
-   return $res->send('Welcome to Phast Framework!');
-});
+Router::get("/home", function (): Response {
+   return new Response("Welcome to the home page!");
+})->name('home.welcome');

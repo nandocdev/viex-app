@@ -17,7 +17,8 @@ namespace Phast\System\Core;
 use Dotenv\Dotenv;
 use Phast\System\Http\Request;
 use Phast\System\Http\Response;
-use Phast\System\Routing\Router;
+use Phast\System\Routing\RouterManager;
+use Phast\System\Routing\Facades\Router as RouterFacade;
 use Phast\System\View\View;
 use Throwable;
 
@@ -41,8 +42,15 @@ class Application {
    protected function registerServices(): void {
       $this->container->singleton(Request::class, fn() => new Request());
       $this->container->singleton(Response::class, fn() => new Response());
-      $this->container->singleton(Router::class, fn(Container $c) => new Router($c));
+      $this->container->singleton(RouterManager::class, function ($container) {
+         return new RouterManager(
+            $container,
+            $container->resolve(Application::class)
+         );
+      });
       $this->container->singleton(View::class, fn(Container $c) => new View($c->resolve(Application::class)->basePath));
+
+      // $this->container->bind(RouterFacade::class, fn(Container $container) => new RouterFacade());
    }
 
    protected function loadRoutes(): void {
@@ -51,8 +59,12 @@ class Application {
 
    public function run(): void {
       try {
-         $router = $this->container->resolve(Router::class);
-         $response = $router->resolve();
+         // El RouterManager se encarga de todo.
+         $routerManager = $this->container->resolve(RouterManager::class);
+         $request = $this->container->resolve(Request::class);
+
+         $response = $routerManager->resolve($request);
+
          $this->sendResponse($response);
       } catch (Throwable $e) {
          $this->handleException($e);
@@ -68,8 +80,12 @@ class Application {
    }
 
    protected function handleException(Throwable $e): void {
+      // Ahora podemos usar el getStatusCode() de nuestras excepciones personalizadas.
       $statusCode = method_exists($e, 'getCode') ? $e->getCode() : 500;
-      $message = $_ENV['APP_DEBUG'] === 'true' ? $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine() : 'Server Error';
+
+      $message = $_ENV['APP_DEBUG'] === 'true'
+         ? $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine()
+         : 'Server Error';
 
       $response = new Response($message, $statusCode);
       $this->sendResponse($response);
