@@ -18,8 +18,15 @@ use Dotenv\Dotenv;
 use Phast\System\Http\Request;
 use Phast\System\Http\Response;
 use Phast\System\Routing\RouterManager;
-use Phast\System\Routing\Facades\Router as RouterFacade;
-use Phast\System\View\View;
+
+// --- NUEVAS IMPORTACIONES NECESARIAS ---
+use Phast\System\Rendering\Contracts\ViewEngine;
+use Phast\System\Rendering\Engines\PhpEnginer; // ¡IMPORTANTE: Corregido de PhpEnginer a PhpEngine!
+use Phast\System\Rendering\Core\DataHandler;
+use Phast\System\Rendering\Core\TemplateLoader;
+use Phast\System\Rendering\Render; // La clase principal Render
+// ---------------------------------------
+
 use Throwable;
 
 class Application {
@@ -48,7 +55,38 @@ class Application {
             $container->resolve(Application::class)
          );
       });
-      $this->container->singleton(View::class, fn(Container $c) => new View($c->resolve(Application::class)->basePath));
+
+      // --- REGISTRO DE SERVICIOS PARA EL SISTEMA DE VISTAS ---
+
+      // DataHandler: Encargado de manejar los datos para las vistas
+      $this->container->singleton(DataHandler::class, function () {
+         return new DataHandler();
+      });
+
+      // TemplateLoader: Encargado de cargar las rutas de las plantillas (vistas, layouts, parciales)
+      $this->container->singleton(TemplateLoader::class, function ($c) {
+         // Si TemplateLoader necesita el basePath o alguna otra configuración, pásasela aquí
+         return new TemplateLoader($c->resolve(Application::class)->basePath); // Asumiendo que tus vistas están en 'basePath/views'
+      });
+
+      // PhpEngine (la implementación concreta de ViewEngine):
+      // Bindeamos la interfaz ViewEngine a su implementación concreta PhpEngine.
+      // Cuando alguien pida 'ViewEngine', el contenedor creará una instancia de PhpEngine.
+      $this->container->singleton(ViewEngine::class, function ($c) {
+         return new PhpEnginer(
+            $c->resolve(DataHandler::class),      // Resuelve DataHandler de forma automática
+            $c->resolve(TemplateLoader::class)    // Resuelve TemplateLoader de forma automática
+         );
+      });
+
+      // Render: La clase principal que coordina el renderizado de vistas y layouts
+      // Depende de TemplateLoader y ViewEngine, que el contenedor ya sabe cómo resolver.
+      $this->container->singleton(Render::class, function ($c) {
+         return new Render(
+            $c->resolve(TemplateLoader::class),
+            $c->resolve(ViewEngine::class) // Esto obtendrá la instancia de PhpEngine
+         );
+      });
 
       // $this->container->bind(RouterFacade::class, fn(Container $container) => new RouterFacade());
    }

@@ -45,6 +45,7 @@ class Container {
    }
 
    public function resolve(string $key) {
+
       if (isset($this->bindings[$key])) {
          return call_user_func($this->bindings[$key]);
       }

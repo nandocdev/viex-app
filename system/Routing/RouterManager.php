@@ -94,8 +94,9 @@ class RouterManager {
       $handler = $this->resolver->resolve($route['action']);
 
       // Crea la closure final que ejecuta el controlador con sus parámetros
-      $finalHandler = function (Request $request) use ($handler, $params) {
-         return call_user_func_array($handler, array_merge([$request], $params));
+      $finalHandler = function (Request $request, Response $response) use ($handler, $params) {
+         $request->input('input', $params); // Inyecta los parámetros en la petición
+         return call_user_func_array($handler, array_merge([$request, $response]));
       };
 
       // Despacha la petición a través de la pila de middleware

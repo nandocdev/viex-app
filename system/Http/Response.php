@@ -15,7 +15,8 @@ declare(strict_types=1);
 namespace Phast\System\Http;
 
 use Phast\System\Core\Container;
-use Phast\System\View\View;
+use Phast\System\Rendering\View;
+use Phast\System\Rendering\Render;
 
 class Response {
 
@@ -52,9 +53,34 @@ class Response {
       return $this;
    }
 
-   public function view(string $view, array $data = [], string $layout = null): self {
-      $viewContent = Container::getInstance()->resolve(View::class)->render($view, $data, $layout);
-      $this->body = $viewContent;
-      return $this;
+   // public function view(string $view, array $data = [], string $layout = ''): self {
+   //    $viewContent = Container::getInstance()
+   //       ->resolve(Render::class)
+   //       ->render(new View($view, $data, $layout));
+   //    $this->body = $viewContent;
+   //    return $this;
+   // }
+
+   public function view(string $viewName, array $data = [], string $layoutName = 'default'): self {
+      // 1. Crear una instancia de la clase View de manera correcta.
+      // Aquí pasamos los argumentos en el orden y tipo correctos:
+      // viewName, viewSubPath, layoutName, data
+      $viewObject = new View($viewName, $data, $layoutName);
+
+      try {
+         // 2. Obtener una instancia del Render principal del contenedor.
+         // Es el Render quien orquesta la carga de plantillas y el motor de vistas.
+         $renderer = Container::getInstance()->resolve(Render::class);
+
+         // 3. Llamar al método render del objeto Render, pasándole la instancia de View.
+         $viewContent = $renderer->render($viewObject);
+
+         $this->body = $viewContent;
+         return $this;
+      } catch (\Exception $e) {
+         // Manejo de errores: loggea o lanza una excepción más específica.
+         // Para depuración, puedes re-lanzar la excepción.
+         throw new \Exception("Error al renderizar la vista '{$viewName}': " . $e->getMessage(), 0, $e);
+      }
    }
 }

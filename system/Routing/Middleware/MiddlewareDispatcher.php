@@ -61,7 +61,7 @@ class MiddlewareDispatcher {
       }
 
       // Ejecutamos la cadena completa, comenzando por la capa más externa.
-      return $runner($request);
+      return $runner($request, new Response());
    }
 
 

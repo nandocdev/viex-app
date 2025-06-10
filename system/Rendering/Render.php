@@ -18,6 +18,7 @@ use Phast\System\Rendering\Contracts\ViewEngine;
 use Phast\System\Rendering\Core\TemplateLoader;
 use Phast\System\Rendering\View;
 
+
 class Render {
    private TemplateLoader $templateLoader;
    private ViewEngine $viewEngine; // Dependencia a la interfaz del motor de vistas

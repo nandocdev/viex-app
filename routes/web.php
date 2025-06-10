@@ -7,7 +7,4 @@ use Phast\System\Http\Request;
 use Phast\System\Http\Response;
 use Phast\System\Routing\Facades\Router;
 
-Router::get("/", function (): Response {
-   return (new Response())
-      ->view('example');
-})->name('home.welcome');
+Router::get("/", 'HomeController@index')->name('home.welcome');

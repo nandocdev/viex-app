@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Phast/System
  * @subpackage  Routing/Resolvers
@@ -8,6 +9,7 @@
  * @version     1.0.0
  * @description Resuelve la acción de una ruta a un callable ejecutable.
  */
+
 declare(strict_types=1);
 
 namespace Phast\System\Routing\Resolvers;
@@ -21,7 +23,7 @@ class HandlerResolver {
     * El namespace base para todos los controladores.
     * @var string
     */
-   protected string $controllerNamespace = 'App\\Controllers\\';
+   protected string $controllerNamespace = 'Phast\\App\\Controllers\\';
 
    /**
     * El contenedor de inyección de dependencias.

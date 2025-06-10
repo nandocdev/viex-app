@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Phast\System\Rendering\Core;
 
 use Phast\System\Core\Container;
+use Phast\System\Core\Application;
 use \InvalidArgumentException;
 
 class TemplateLoader {
@@ -23,13 +24,12 @@ class TemplateLoader {
    private string $partialsBasePath; // Una ruta base para parciales globales/comunes
    const DS = DIRECTORY_SEPARATOR;
 
-   // !TODO: Cambiar el metodo de acceder a la configuracion nativa por el contenedor de configuracion
    public function __construct() {
-      $basePath = Container::getInstance()->resolve('basePath');
+      $basePath = Container::getInstance()->resolve(Application::class)->basePath;
 
-      $this->layoutsBasePath = rtrim($basePath . '/resources/layouts/', self::DS) . self::DS;
-      $this->viewsBasePath = rtrim($basePath . '/app/Views/', self::DS) . self::DS;
-      $this->partialsBasePath = rtrim($basePath . '/resources/partials/', self::DS) . self::DS;
+      $this->layoutsBasePath = rtrim($basePath . '/resources/views/layouts', self::DS) . self::DS;
+      $this->viewsBasePath = rtrim($basePath . '/app/Views', self::DS) . self::DS;
+      $this->partialsBasePath = rtrim($basePath . '/resources/views/partials', self::DS) . self::DS;
 
       if (!is_dir($this->layoutsBasePath)) {
          throw new InvalidArgumentException("La ruta base de layouts no es un directorio válido: {$this->layoutsBasePath}");
@@ -90,7 +90,7 @@ class TemplateLoader {
       // Prioridad: buscar parciales relativos a la plantilla actual
       if (!empty($baseTemplatePath)) {
          $baseDir = dirname($baseTemplatePath);
-         $relativePartialPath = $baseDir . self::DS . 'partials' . self::DS . $partialName . '.partial.phtml';
+         $relativePartialPath = $baseDir . self::DS . 'partials' . $partialName . '.partial.phtml';
          if (file_exists($relativePartialPath)) {
             return $relativePartialPath;
          }
