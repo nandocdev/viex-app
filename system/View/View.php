@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Phast\System\View;
 
+use Phast\System\Core\Container;
+
 /**
  * Motor de plantillas de Phast.
  * Fusiona la carga de plantillas, el manejo de datos y el renderizado.
@@ -37,11 +39,15 @@ class View {
     *
     * @param string $basePath La ruta base de la aplicación.
     */
-   public function __construct(string $basePath) {
-      // Unificamos la estructura de directorios dentro de /app/Views
+   public function __construct(string $basePath = '') {
+      if (empty($basePath)) {
+         // Si no se proporciona basePath, intenta resolverlo desde el contenedor.
+         // Esto permite que el contenedor de DI lo inyecte automáticamente.
+         $basePath = Container::getInstance()->resolve('basePath');
+      }
       $this->viewsPath = $basePath . '/app/Views/';
-      $this->layoutsPath = $basePath . '/app/Views/layouts/';
-      $this->partialsPath = $basePath . '/app/Views/partials/';
+      $this->layoutsPath = $basePath . '/resources/layouts/';
+      $this->partialsPath = $basePath . '/resources/partials/';
    }
 
    /**
@@ -70,6 +76,10 @@ class View {
       $viewContent = $this->renderFile($this->getViewPath($view), $finalData);
 
       // Si se especifica un layout, renderiza el layout y reemplaza @content.
+      if (!$layout) {
+         $layout = 'main';
+      }
+
       if ($layout) {
          $layoutContent = $this->renderFile($this->getLayoutPath($layout), $finalData);
          $finalContent = str_replace('@content', $viewContent, $layoutContent);
@@ -133,18 +143,18 @@ class View {
     * @return string
     */
    private function normalizePath(string $name): string {
-      return str_replace('.', '/', $name) . $this->defaultExtension;
+      return str_replace('.', '/', $name);
    }
 
    private function getViewPath(string $name): string {
-      return $this->viewsPath . $this->normalizePath($name);
+      return $this->viewsPath . $this->normalizePath($name) . $this->defaultExtension;;
    }
 
    private function getLayoutPath(string $name): string {
-      return $this->layoutsPath . $this->normalizePath($name);
+      return $this->layoutsPath . $this->normalizePath($name) . '/index.layout' . $this->defaultExtension;
    }
 
    private function getPartialPath(string $name): string {
-      return $this->partialsPath . $this->normalizePath($name);
+      return $this->partialsPath . $this->normalizePath($name) . $this->defaultExtension;;
    }
 }

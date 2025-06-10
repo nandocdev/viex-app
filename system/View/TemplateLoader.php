@@ -40,6 +40,7 @@ class TemplateLoader {
 
    public function loadLayout(string $layout): string {
       $path = $this->layoutsPath . $layout . '/index.layout' . $this->ext;
+      print_r($path);
       if (!file_exists($path)) {
          throw new \InvalidArgumentException("Layout file not found: {$layout}");
       }
