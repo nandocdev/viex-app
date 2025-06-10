@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Phast/System
  * @subpackage  Routing
@@ -8,6 +9,7 @@
  * @version     1.0.0
  * @description Orquesta el proceso completo de enrutamiento: carga, matching y despacho.
  */
+
 declare(strict_types=1);
 
 namespace Phast\System\Routing;
@@ -76,7 +78,7 @@ class RouterManager {
     * @return Response La respuesta generada.
     * @throws RouteNotFoundException Si no se encuentra ninguna ruta.
     */
-   public function resolve(Request $request): Response {
+   public function resolve(Request $request): mixed {
       $this->loadRoutesFromFiles();
 
       $matched = $this->matcher->match($request, $this->collector);

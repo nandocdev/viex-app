@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Phast/System
  * @subpackage  Routing/Middleware
@@ -8,6 +9,7 @@
  * @version     1.0.0
  * @description Ejecuta una pila de middleware usando el patrón de pipeline (cebolla).
  */
+
 declare(strict_types=1);
 
 namespace Phast\System\Routing\Middleware;
@@ -47,7 +49,7 @@ class MiddlewareDispatcher {
     * @param Closure $finalHandler El handler final (el controlador) a ejecutar al final de la pila.
     * @return Response La respuesta generada.
     */
-   public function dispatch(array $middlewareStack, Request $request, Closure $finalHandler): Response {
+   public function dispatch(array $middlewareStack, Request $request, Closure $finalHandler): mixed {
       // El "corazón de la cebolla" es el handler del controlador.
       // Si no hay middleware, este se ejecutará directamente.
       $runner = $finalHandler;

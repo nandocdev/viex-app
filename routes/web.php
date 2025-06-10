@@ -7,6 +7,7 @@ use Phast\System\Http\Request;
 use Phast\System\Http\Response;
 use Phast\System\Routing\Facades\Router;
 
-Router::get("/home", function (): Response {
-   return new Response("Welcome to the home page!");
+Router::post("/", function (): Response {
+   return (new Response())
+      ->send("<h1>Welcome to Phast Framework</h1><p>This is the home page.</p>");
 })->name('home.welcome');

@@ -20,6 +20,7 @@ class TemplateLoader {
    private string $viewsPath;
    private string $layoutsPath;
    private string $partialsPath;
+   private string $ext = '.phtml';
 
    public function __construct() {
       $basePath = Container::getInstance()->resolve('basePath');
@@ -30,7 +31,7 @@ class TemplateLoader {
    }
 
    public function loadView(string $view): string {
-      $path = $this->viewsPath . $view . '.php';
+      $path = $this->viewsPath . $view . $this->ext;
       if (!file_exists($path)) {
          throw new \InvalidArgumentException("View file not found: {$view}");
       }
@@ -38,7 +39,7 @@ class TemplateLoader {
    }
 
    public function loadLayout(string $layout): string {
-      $path = $this->layoutsPath . $layout . '.php';
+      $path = $this->layoutsPath . $layout . '/index.layout' . $this->ext;
       if (!file_exists($path)) {
          throw new \InvalidArgumentException("Layout file not found: {$layout}");
       }
@@ -46,7 +47,7 @@ class TemplateLoader {
    }
 
    public function loadPartial(string $partial): string {
-      $path = $this->partialsPath . $partial . '.php';
+      $path = $this->partialsPath . $partial . $this->ext;
       if (!file_exists($path)) {
          throw new \InvalidArgumentException("Partial file not found: {$partial}");
       }
