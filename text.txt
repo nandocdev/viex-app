@@ -1,0 +1,87 @@
+.
+├── app
+│   ├── Controllers
+│   │   └── HomeController.php
+│   └── Views
+│       ├── Dashboard
+│       │   └── index.view.phtml
+│       └── Welcome
+│           ├── home.view.phtml
+│           └── partials
+│               └── my_partial.partial.phtml
+├── composer.json
+├── composer.lock
+├── config
+│   ├── app.php
+│   └── database.php
+├── doc
+│   ├── analisis
+│   │   └── Resumen.md
+│   ├── PjastDoc.md
+│   ├── ROUTING.md
+│   └── Views.md
+├── LICENSE
+├── public
+│   └── index.php
+├── README.md
+├── resources
+│   └── views
+│       ├── layouts
+│       │   ├── auth
+│       │   │   └── index.layout.phtml
+│       │   └── default
+│       │       └── index.layout.phtml
+│       └── partials
+│           ├── global_header.partial.phtml
+│           └── sidebar.partial.phtml
+├── routes
+│   └── web.php
+├── system
+│   ├── Core
+│   │   ├── Application.php
+│   │   └── Container.php
+│   ├── Database
+│   │   ├── Connection.php
+│   │   ├── DatabaseManager.php
+│   │   └── Database.php
+│   ├── Http
+│   │   ├── Request_cp.php
+│   │   ├── Request.php
+│   │   └── Response.php
+│   ├── Rendering
+│   │   ├── Contracts
+│   │   │   └── ViewEngine.php
+│   │   ├── Core
+│   │   │   ├── DataHandler.php
+│   │   │   └── TemplateLoader.php
+│   │   ├── Engines
+│   │   │   └── PhpEngine.php
+│   │   ├── Render.php
+│   │   └── View.php
+│   ├── Routing
+│   │   ├── Cache
+│   │   │   └── RouteCache.php
+│   │   ├── Collectors
+│   │   │   ├── RouteCollector.php
+│   │   │   └── RouteGroup.php
+│   │   ├── Exceptions
+│   │   │   ├── InvalidRouteException.php
+│   │   │   └── RouteNotFoundException.php
+│   │   ├── Facades
+│   │   │   └── Router.php
+│   │   ├── Generators
+│   │   │   └── UrlGenerator.php
+│   │   ├── Matchers
+│   │   │   └── RouteMatcher.php
+│   │   ├── Middleware
+│   │   │   └── MiddlewareDispatcher.php
+│   │   ├── Resolvers
+│   │   │   └── HandlerResolver.php
+│   │   └── RouterManager.php
+│   └── View
+│       ├── DataHandler.php
+│       ├── TemplateLoader.php
+│       └── View.php
+└── text.txt
+
+36 directories, 49 files

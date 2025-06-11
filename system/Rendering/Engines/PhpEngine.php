@@ -19,7 +19,7 @@ use Phast\System\Rendering\Core\DataHandler;
 use Phast\System\Rendering\Core\TemplateLoader;
 use InvalidArgumentException;
 
-class PhpEnginer implements ViewEngine {
+class PhpEngine implements ViewEngine {
    private DataHandler $dataHandler;
    private TemplateLoader $templateLoader;
    // Opcional: private Logger $logger; // Para logear errores de parciales
@@ -42,23 +42,17 @@ class PhpEnginer implements ViewEngine {
          throw new InvalidArgumentException("El archivo de plantilla no existe: {$templatePath}");
       }
 
-      // Establece los datos en el DataHandler para que estén disponibles para la vista
-      // No sobrescribe si ya hay datos previos establecidos por otros renderizados
-      $this->dataHandler->setData($data);
+      $renderer = function () use ($templatePath, $data) {
+         // extract() es menos peligroso aquí porque no controlamos el flujo,
+         // pero sigue siendo mejor pasar un objeto de datos o un array.
+         extract($data);
+         ob_start();
+         include $templatePath;
+         return ob_get_clean();
+      };
 
-      // Extrae los datos para que estén disponibles como variables locales en la vista
-      // La vista accederá a los datos con $variable_name
-      extract($this->dataHandler->prepareDataForView());
-
-      ob_start();
-      // Incluir el archivo de plantilla para su ejecución.
-      // Esto es seguro y permite la ejecución de código PHP dentro del archivo.
-      include $templatePath;
-      $output = ob_get_clean();
-
-      // Procesar directivas después de la inclusión (ej. parciales si no se resuelven antes)
-      // Ojo: si los parciales requieren datos *dinámicos* de la vista que los llama,
-      // esto es complejo. Aquí asumimos que los parciales acceden a los mismos $data.
+      $output = $renderer();
+      // Procesar directivas internas como @partial y @content
       return $this->processDirectives($output, $templatePath);
    }
 
@@ -78,7 +72,7 @@ class PhpEnginer implements ViewEngine {
       // Incluir el contenido como si fuera un archivo para ejecutar PHP incrustado
       // Esto es un poco más peligroso que `include $templatePath` si el $content no es de confianza
       // pero es necesario para la inyección de la vista en el layout.
-      eval('?>' . $content); // Se mantiene eval aquí para la flexibilidad con @content, pero se debe usar con precaución.
+      eval ('?>' . $content); // Se mantiene eval aquí para la flexibilidad con @content, pero se debe usar con precaución.
       $output = ob_get_clean();
 
       // Procesar directivas después de la inclusión (ej. parciales)

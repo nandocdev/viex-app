@@ -40,28 +40,17 @@ class Render {
     * @throws \InvalidArgumentException Si alguna plantilla no existe.
     */
    public function render(View $view): string {
-      // 1. Obtener la ruta de la vista principal
-      $viewPath = $this->templateLoader->loadViewPath(
-         $view->getViewName()
-      );
-
-      // 2. Renderizar el contenido de la vista
+      // 1. Renderizar el contenido de la vista primero
+      $viewPath = $this->templateLoader->loadViewPath($view->getViewName());
+      // Pasamos los datos a la vista. El motor los pondrá disponibles.
       $viewContent = $this->viewEngine->render($viewPath, $view->getData());
 
-      // 3. Obtener la ruta del layout
+      // 2. Renderizar el layout, pasándole el contenido de la vista como un dato más.
       $layoutPath = $this->templateLoader->loadLayoutPath($view->getLayoutName());
 
-      // 4. Leer el contenido raw del layout (sin ejecutar PHP aún)
-      $layoutRawContent = file_get_contents($layoutPath);
-      if ($layoutRawContent === false) {
-         throw new \RuntimeException("No se pudo leer el contenido del layout: {$layoutPath}");
-      }
+      // Fusionamos los datos originales con el contenido de la vista.
+      $layoutData = array_merge($view->getData(), ['content' => $viewContent]);
 
-      // 5. Inyectar el contenido de la vista en el marcador del layout (@content)
-      $finalContent = str_replace('@content', $viewContent, $layoutRawContent);
-
-      // 6. Compilar el layout con el contenido de la vista y los datos
-      // Usamos compileContent aquí porque ya inyectamos el @content y ahora queremos ejecutar el PHP del layout
-      return $this->viewEngine->compileContent($finalContent, $view->getData(), $layoutPath);
+      return $this->viewEngine->render($layoutPath, $layoutData);
    }
 }

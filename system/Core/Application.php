@@ -21,11 +21,13 @@ use Phast\System\Routing\RouterManager;
 
 // --- NUEVAS IMPORTACIONES NECESARIAS ---
 use Phast\System\Rendering\Contracts\ViewEngine;
-use Phast\System\Rendering\Engines\PhpEnginer; // ¡IMPORTANTE: Corregido de PhpEnginer a PhpEngine!
+use Phast\System\Rendering\Engines\PhpEngine; // ¡IMPORTANTE: Corregido de PhpEnginer a PhpEngine!
 use Phast\System\Rendering\Core\DataHandler;
 use Phast\System\Rendering\Core\TemplateLoader;
 use Phast\System\Rendering\Render; // La clase principal Render
+use Phast\System\Plugins\Session\SessionManager; // Si necesitas manejar sesiones, asegúrate de que SessionManager esté importado
 // ---------------------------------------
+use Phast\System\Core\Contracts\ServiceProviderInterface; // ¡Añadir esta!
 
 use Throwable;
 
@@ -44,58 +46,54 @@ class Application {
    protected function loadEnvironment(): void {
       $dotenv = Dotenv::createImmutable($this->basePath);
       $dotenv->load();
+
+      // Falla rápido si faltan variables críticas
+      $dotenv->required([
+         'APP_ENV',
+         'DB_HOST',
+         'DB_DATABASE',
+         'DB_USERNAME'
+      ])->notEmpty();
    }
 
+   // ¡MÉTODO registerServices REFACTORIZADO!
    protected function registerServices(): void {
-      $this->container->singleton(Request::class, fn() => new Request());
+      // Registrar los servicios básicos que siempre se necesitan
+      $this->container->singleton(Request::class, fn() => new Request()); // Asumiendo la refactorización de Request
       $this->container->singleton(Response::class, fn() => new Response());
-      $this->container->singleton(RouterManager::class, function ($container) {
-         return new RouterManager(
-            $container,
-            $container->resolve(Application::class)
-         );
-      });
 
-      // --- REGISTRO DE SERVICIOS PARA EL SISTEMA DE VISTAS ---
+      // Cargar y registrar todos los proveedores de servicios
+      $providers = require $this->basePath . '/config/providers.php';
 
-      // DataHandler: Encargado de manejar los datos para las vistas
-      $this->container->singleton(DataHandler::class, function () {
-         return new DataHandler();
-      });
+      foreach ($providers as $providerClass) {
+         if (!class_exists($providerClass)) {
+            // Falla rápido si un provider no existe
+            throw new \Exception("Service Provider class not found: {$providerClass}");
+         }
 
-      // TemplateLoader: Encargado de cargar las rutas de las plantillas (vistas, layouts, parciales)
-      $this->container->singleton(TemplateLoader::class, function ($c) {
-         // Si TemplateLoader necesita el basePath o alguna otra configuración, pásasela aquí
-         return new TemplateLoader($c->resolve(Application::class)->basePath); // Asumiendo que tus vistas están en 'basePath/views'
-      });
+         $providerInstance = new $providerClass();
 
-      // PhpEngine (la implementación concreta de ViewEngine):
-      // Bindeamos la interfaz ViewEngine a su implementación concreta PhpEngine.
-      // Cuando alguien pida 'ViewEngine', el contenedor creará una instancia de PhpEngine.
-      $this->container->singleton(ViewEngine::class, function ($c) {
-         return new PhpEnginer(
-            $c->resolve(DataHandler::class),      // Resuelve DataHandler de forma automática
-            $c->resolve(TemplateLoader::class)    // Resuelve TemplateLoader de forma automática
-         );
-      });
+         if (!$providerInstance instanceof ServiceProviderInterface) {
+            throw new \Exception("Class {$providerClass} must implement ServiceProviderInterface.");
+         }
 
-      // Render: La clase principal que coordina el renderizado de vistas y layouts
-      // Depende de TemplateLoader y ViewEngine, que el contenedor ya sabe cómo resolver.
-      $this->container->singleton(Render::class, function ($c) {
-         return new Render(
-            $c->resolve(TemplateLoader::class),
-            $c->resolve(ViewEngine::class) // Esto obtendrá la instancia de PhpEngine
-         );
-      });
-
-      // $this->container->bind(RouterFacade::class, fn(Container $container) => new RouterFacade());
+         // Llamar al método register de cada provider
+         $providerInstance->register($this->container);
+      }
    }
+
+
 
    protected function loadRoutes(): void {
       require_once $this->basePath . '/routes/web.php';
    }
 
    public function run(): void {
+      // --- INICIAR LA SESIÓN AL PRINCIPIO DEL CICLO DE VIDA DE LA APLICACIÓN ---
+      $sessionManager = $this->container->resolve(SessionManager::class);
+      $sessionManager->start();
+      // --------------------------------------------------------------------------
+
       try {
          // El RouterManager se encarga de todo.
          $routerManager = $this->container->resolve(RouterManager::class);
@@ -108,6 +106,8 @@ class Application {
          $this->handleException($e);
       }
    }
+
+
 
    protected function sendResponse(Response $response): void {
       http_response_code($response->getStatusCode());

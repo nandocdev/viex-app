@@ -102,20 +102,13 @@ class Database {
       return $this->getPdo()->lastInsertId();
    }
 
-
-   // metodo que cuenta todos los registros que puede retornar una consulta, reemplaza todos los campos de la consulta por un COUNT(*)
-   private function count(string $sql, array $bindings = []): int {
-      $countSql = preg_replace('/SELECT\s+(.*)\s+FROM\s+(.*)/i', 'SELECT COUNT(*) FROM $2', $sql);
-      return (int) $this->query($countSql, $bindings)->fetchColumn();
-   }
-
    // con el datos de cantidad de registros, se puede paginar los resultados
-   public function paginate(string $sql, array $bindings = [], int $perPage = 15, int $page = 1): array {
-      $total = $this->count($sql, $bindings);
+   public function paginate(string $selectSql, string $countSql, array $bindings = [], int $perPage = 15, int $page = 1): array {
+      $total = (int) $this->query($countSql, $bindings)->fetchColumn();
       $offset = ($page - 1) * $perPage;
 
       // Modifica la consulta original para incluir LIMIT y OFFSET
-      $paginatedSql = $sql . " LIMIT :limit OFFSET :offset";
+      $paginatedSql = $selectSql . " LIMIT :limit OFFSET :offset";
       $bindings[':limit'] = $perPage;
       $bindings[':offset'] = $offset;
 

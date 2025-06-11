@@ -9,11 +9,18 @@
 <body>
    <header>
       <h1>Mi Aplicación Phast</h1>
-      <nav>...</nav>
+      <nav>
+         <ul>
+            <li><a href="/">Inicio</a></li>
+            <li><a href="/about">Acerca de</a></li>
+            <li><a href="/contact">Contacto</a></li>
+         </ul>
+      </nav>
    </header>
 
    <main>
-      @content </main>
+      <?= $content ?>
+   </main>
 
    <footer>
       <p>&copy; 2025 Todos los derechos reservados.</p>

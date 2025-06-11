@@ -19,13 +19,19 @@ use Phast\System\Rendering\View;
 use Phast\System\Rendering\Render;
 
 class Response {
-
+   /**
+    * @param string $body El cuerpo de la respuesta.
+    * @param int $statusCode El código de estado HTTP.
+    * @param array $headers Las cabeceras HTTP.
+    */
    public function __construct(
       protected string $body = '',
       protected int $statusCode = 200,
-      protected array $headers = ['Content-Type' => 'text/html']
+      protected array $headers = ['Content-Type' => 'text/html; charset=utf-8']
    ) {
    }
+
+   // --- Getters para el Front Controller ---
 
    public function getBody(): string {
       return $this->body;
@@ -39,48 +45,145 @@ class Response {
       return $this->headers;
    }
 
+   // --- Métodos de la API Fluida (Inmutables) ---
+
+   /**
+    * Establece el código de estado.
+    * Crea una nueva instancia para mantener la inmutabilidad.
+    */
+   public function status(int $code): self {
+      $new = clone $this;
+      $new->statusCode = $code;
+      return $new;
+   }
+
+   /**
+    * Añade o sobreescribe una cabecera.
+    */
+   public function header(string $name, string $value): self {
+      $new = clone $this;
+      // Normaliza el nombre de la cabecera para evitar duplicados por mayúsculas/minúsculas
+      $new->headers[ucwords(strtolower($name), '-')] = $value;
+      return $new;
+   }
+
+   /**
+    * Prepara una respuesta JSON.
+    */
    public function json(array|object $data, int $statusCode = 200): self {
-      $this->body = json_encode($data);
-      $this->statusCode = $statusCode;
-      $this->headers['Content-Type'] = 'application/json';
-      return $this;
+      try {
+         $body = json_encode($data, JSON_THROW_ON_ERROR);
+      } catch (\JsonException $e) {
+         // Manejar el error de codificación, quizás con una respuesta de error interna.
+         $body = json_encode(['error' => 'Failed to encode JSON response.']);
+         $statusCode = 500;
+      }
+
+      $new = $this->status($statusCode)
+         ->header('Content-Type', 'application/json');
+      $new->body = $body;
+
+      return $new;
    }
 
-   public function send(string $body = '', int $statusCode = 200, array $headers = []): self {
-      $this->body = $body;
-      $this->statusCode = $statusCode;
-      $this->headers = array_merge($this->headers, $headers);
-      return $this;
-   }
-
-   // public function view(string $view, array $data = [], string $layout = ''): self {
-   //    $viewContent = Container::getInstance()
-   //       ->resolve(Render::class)
-   //       ->render(new View($view, $data, $layout));
-   //    $this->body = $viewContent;
-   //    return $this;
-   // }
-
+   /**
+    * Prepara una respuesta de vista renderizada.
+    * ¡Delega la renderización al servicio de Vistas del contenedor!
+    */
    public function view(string $viewName, array $data = [], string $layoutName = 'default'): self {
-      // 1. Crear una instancia de la clase View de manera correcta.
-      // Aquí pasamos los argumentos en el orden y tipo correctos:
-      // viewName, viewSubPath, layoutName, data
+      // 1. Obtener el servicio de renderizado del contenedor.
+      $renderer = Container::getInstance()->resolve(Render::class);
+
+      // 2. Crear el objeto View.
       $viewObject = new View($viewName, $data, $layoutName);
 
-      try {
-         // 2. Obtener una instancia del Render principal del contenedor.
-         // Es el Render quien orquesta la carga de plantillas y el motor de vistas.
-         $renderer = Container::getInstance()->resolve(Render::class);
+      // 3. Renderizar la vista.
+      $viewContent = $renderer->render($viewObject);
 
-         // 3. Llamar al método render del objeto Render, pasándole la instancia de View.
-         $viewContent = $renderer->render($viewObject);
+      // 4. Devolver una nueva instancia de Response con el contenido.
+      $new = clone $this;
+      $new->body = $viewContent;
+      // Asegura que el Content-Type es correcto para HTML
+      return $new->header('Content-Type', 'text/html; charset=utf-8');
+   }
 
-         $this->body = $viewContent;
-         return $this;
-      } catch (\Exception $e) {
-         // Manejo de errores: loggea o lanza una excepción más específica.
-         // Para depuración, puedes re-lanzar la excepción.
-         throw new \Exception("Error al renderizar la vista '{$viewName}': " . $e->getMessage(), 0, $e);
+   /**
+    * Prepara una respuesta de redirección.
+    */
+   public function redirect(string $url, int $statusCode = 302): self {
+      // Valida que el código de estado sea uno de redirección.
+      if ($statusCode < 300 || $statusCode > 308) {
+         $statusCode = 302;
       }
+
+      return $this->status($statusCode)
+         ->header('Location', $url)
+         ->setBody(''); // El cuerpo de una redirección debe estar vacío.
+   }
+
+   /**
+    * Añade una cookie a la respuesta.
+    * La cookie se enviará usando la función setcookie() en el Front Controller.
+    * Aquí solo preparamos la cabecera 'Set-Cookie'.
+    */
+   public function cookie(
+      string $name,
+      string $value = '',
+      int $expires = 0,
+      string $path = '/',
+      string $domain = '',
+      bool $secure = true,
+      bool $httpOnly = true,
+      string $sameSite = 'Lax' // 'Lax' es un default más seguro que 'Strict' para la mayoría de casos.
+   ): self {
+      $cookieString = urlencode($name) . '=' . urlencode($value);
+      if ($expires !== 0) {
+         $cookieString .= '; Expires=' . gmdate('D, d M Y H:i:s T', $expires);
+      }
+      $cookieString .= '; Path=' . $path;
+      if ($domain) {
+         $cookieString .= '; Domain=' . $domain;
+      }
+      if ($secure) {
+         $cookieString .= '; Secure';
+      }
+      if ($httpOnly) {
+         $cookieString .= '; HttpOnly';
+      }
+      $cookieString .= '; SameSite=' . $sameSite;
+
+      // Usamos addHeader para manejar múltiples Set-Cookie
+      return $this->addHeader('Set-Cookie', $cookieString);
+   }
+
+   /**
+    * Método helper para añadir cabeceras sin sobreescribir las existentes del mismo nombre.
+    * Útil para Set-Cookie.
+    */
+   public function addHeader(string $name, string $value): self {
+      $new = clone $this;
+      $name = ucwords(strtolower($name), '-');
+
+      if (!isset($new->headers[$name])) {
+         $new->headers[$name] = [];
+      }
+
+      // Convertimos a array si no lo es
+      if (!is_array($new->headers[$name])) {
+         $new->headers[$name] = [$new->headers[$name]];
+      }
+
+      $new->headers[$name][] = $value;
+      return $new;
+   }
+
+   /**
+    * Establece el cuerpo de la respuesta.
+    * No debería ser público para fomentar el uso de métodos como json() o view().
+    */
+   protected function setBody(string $body): self {
+      $new = clone $this;
+      $new->body = $body;
+      return $new;
    }
 }

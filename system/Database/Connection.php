@@ -38,7 +38,7 @@ class Connection {
 
       try {
          return new PDO(
-            $dsn,
+            $this->getDsn($this->config),
             $this->config['username'] ?? null,
             $this->config['password'] ?? null,
             [
@@ -48,20 +48,40 @@ class Connection {
             ]
          );
       } catch (PDOException $e) {
-         throw new PDOException("Database connection failed for driver [{$this->config['driver']}]: " . $e->getMessage(), (int)$e->getCode(), $e);
+         throw new PDOException("Database connection failed for driver [{$this->config['driver']}]: " . $e->getMessage(), (int) $e->getCode(), $e);
       }
    }
 
    private function getDsn(array $config): string {
-      extract($config); // Extrae 'driver', 'host', etc., a variables locales
-
+      $driver = $config['driver'] ?? null;
       switch ($driver) {
          case 'mysql':
-            return "mysql:host={$host};port={$port};dbname={$database};charset={$charset}";
+            return sprintf(
+               "mysql:host=%s;port=%s;dbname=%s;charset=%s",
+               $config['host'],
+               $config['port'],
+               $config['database'],
+               $config['charset']
+            );
          case 'pgsql':
-            return "pgsql:host={$host};port={$port};dbname={$database}";
+            return sprintf(
+               "pgsql:host=%s;port=%s;dbname=%s",
+               $config['host'],
+               $config['port'],
+               $config['database']
+            );
          case 'sqlite':
-            return "sqlite:{$database}";
+            return sprintf(
+               "sqlite:%s",
+               $config['database']
+            );
+         case 'sqlsrv':
+            return sprintf(
+               "sqlsrv:Server=%s,%s;Database=%s",
+               $config['host'],
+               $config['port'],
+               $config['database']
+            );
          default:
             throw new InvalidArgumentException("Unsupported database driver [{$driver}].");
       }

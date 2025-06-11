@@ -24,8 +24,7 @@ class TemplateLoader {
    private string $partialsBasePath; // Una ruta base para parciales globales/comunes
    const DS = DIRECTORY_SEPARATOR;
 
-   public function __construct() {
-      $basePath = Container::getInstance()->resolve(Application::class)->basePath;
+   public function __construct(private readonly string $basePath) {
 
       $this->layoutsBasePath = rtrim($basePath . '/resources/views/layouts', self::DS) . self::DS;
       $this->viewsBasePath = rtrim($basePath . '/app/Views', self::DS) . self::DS;
@@ -66,7 +65,7 @@ class TemplateLoader {
     * @return string La ruta completa del archivo de vista.
     * @throws InvalidArgumentException Si el archivo de vista no existe.
     */
-   public function loadViewPath(string $viewName,): string {
+   public function loadViewPath(string $viewName, ): string {
       $fullPath = $this->viewsBasePath;
       $viewPath = $fullPath . $viewName . '.view.phtml';
 

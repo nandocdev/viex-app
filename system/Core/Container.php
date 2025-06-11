@@ -44,11 +44,16 @@ class Container {
       };
    }
 
-   public function resolve(string $key) {
+   public function resolve(string $key, array $resolving = []) {
 
       if (isset($this->bindings[$key])) {
          return call_user_func($this->bindings[$key]);
       }
+
+      if (in_array($key, $resolving)) {
+         throw new Exception("Circular dependency detected while resolving {$key}.");
+      }
+      $resolving[] = $key;
 
       $reflector = new ReflectionClass($key);
       if (!$reflector->isInstantiable()) {
@@ -61,7 +66,13 @@ class Container {
       }
 
       $dependencies = array_map(
-         fn(ReflectionParameter $param) => $this->resolve($param->getType()->getName()),
+         function (ReflectionParameter $param) use ($key, $resolving) {
+            $type = $param->getType();
+            if (!$type || $type->isBuiltin() || !($type instanceof \ReflectionNamedType)) {
+               throw new Exception("Cannot resolve primitive dependency \${$param->getName()} for class {$key}.");
+            }
+            return $this->resolve($type->getName(), $resolving);
+         },
          $constructor->getParameters()
       );
 

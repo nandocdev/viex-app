@@ -289,34 +289,24 @@ class Request {
     * @return array
     */
    protected function parseBody(): array {
-      $body = [];
-
-      // Datos GET
-      foreach ($_GET as $key => $value) {
-         $body[$key] = filter_input(INPUT_GET, $key, FILTER_SANITIZE_SPECIAL_CHARS);
-      }
-
-      // Datos POST
+      // Simplemente combina los datos crudos. Sin sanitización aquí.
+      $body = $_GET;
       if ($this->method === 'POST') {
-         foreach ($_POST as $key => $value) {
-            $body[$key] = filter_input(INPUT_POST, $key, FILTER_SANITIZE_SPECIAL_CHARS);
-         }
+         $body = array_merge($body, $_POST);
       }
 
-      // Datos JSON (si Content-Type es application/json)
+
+      $rawBody = file_get_contents('php://input'); // ¡Leer solo una vez!
       $contentType = $this->getContentType();
-      echo $contentType;
+
       if (str_contains($contentType, 'application/json')) {
-         $json = json_decode(file_get_contents('php://input'), true);
+         $json = json_decode($rawBody, true);
          if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
             $body = array_merge($body, $json);
          }
-      }
-
-      // Manejo de otros métodos como PUT/DELETE para datos raw (ej. application/x-www-form-urlencoded)
-      if (in_array($this->method, ['PUT', 'DELETE', 'PATCH']) && str_contains($contentType, 'application/x-www-form-urlencoded')) {
-         parse_str(file_get_contents('php://input'), $put_vars);
-         $body = array_merge($body, $put_vars);
+      } elseif (in_array($this->method, ['PUT', 'DELETE', 'PATCH'])) {
+         parse_str($rawBody, $parsedVars);
+         $body = array_merge($body, $parsedVars);
       }
 
       return $body;
