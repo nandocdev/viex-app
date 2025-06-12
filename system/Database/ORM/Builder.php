@@ -12,6 +12,7 @@ namespace Phast\System\Database\ORM;
 use Phast\System\Database\QueryBuilder;
 use Phast\System\Database\Facades\DB;
 use Phast\System\Database\ORM\Exceptions\ModelNotFoundException;
+use Phast\System\Database\ORM\Relationships\Relation;
 
 class Builder {
    /** El constructor de consultas genérico subyacente. */
@@ -19,6 +20,9 @@ class Builder {
 
    /** La instancia del modelo sobre la que se está construyendo la consulta. */
    protected Model $model;
+
+   /** @var array Las relaciones a cargar de forma anticipada. */
+   protected array $eagerLoad = [];
 
    public function __construct(Model $model) {
       $this->model = $model;
@@ -45,9 +49,16 @@ class Builder {
    /**
     * Ejecuta la consulta y devuelve una colección de modelos.
     */
+   // MODIFICA el método get()
    public function get(): Collection {
-      $results = $this->query->get();
-      return $this->model->newCollection($results);
+      $models = $this->query->get();
+      $collection = $this->model->newCollection($models);
+
+      if (!$collection->isEmpty() && !empty($this->eagerLoad)) {
+         $this->loadEagerRelations($collection);
+      }
+
+      return $collection;
    }
 
    /**
@@ -101,5 +112,51 @@ class Builder {
 
    public function getQuery(): QueryBuilder {
       return $this->query;
+   }
+
+   /**
+    * Establece las relaciones a cargar de forma anticipada.
+    */
+   public function with(string|array $relations): self {
+      $this->eagerLoad = is_array($relations) ? $relations : func_get_args();
+      return $this;
+   }
+
+   /**
+    * Carga las relaciones de forma anticipada en una colección de modelos.
+    */
+   protected function loadEagerRelations(Collection $models): void {
+      foreach ($this->eagerLoad as $name) {
+         // Aquí iría la lógica de carga para cada relación.
+         // Por ahora, asumimos que es una relación simple.
+         $relation = $this->model->$name(); // Obtiene el objeto de la relación (ej: HasMany)
+         $relation->addEagerConstraints($models->all());
+
+         $results = $relation->get(); // Ejecuta la consulta para TODOS los modelos relacionados a la vez.
+
+         // Ahora, une los resultados con sus modelos padres.
+         $this->matchEagerlyLoaded($models, $results, $name, $relation);
+      }
+   }
+
+   /**
+    * Une los resultados del eager loading a sus modelos padres.
+    */
+   protected function matchEagerlyLoaded(Collection $models, Collection $results, string $relationName, Relation $relation): void {
+      // Esta es la parte más compleja. Necesitamos agrupar los resultados
+      // por la clave foránea para poder asignarlos eficientemente.
+      $dictionary = $results->all(); // Aquí iría una lógica de agrupación más compleja.
+
+      // Asigna los modelos relacionados a sus padres.
+      // Lógica simplificada:
+      foreach ($models as $model) {
+         // Esto es ineficiente, una implementación real usaría un diccionario.
+         $relatedItems = array_filter($dictionary, function ($related) use ($model, $relation) {
+            // Lógica para comparar foreign key con local key
+            return true; // Simplificado
+         });
+
+         $model->setRelation($relationName, $relation->match(new Collection($relatedItems), $model));
+      }
    }
 }

@@ -12,7 +12,10 @@ namespace Phast\System\Database\ORM\Concerns;
 
 use Phast\System\Database\ORM\Model;
 use Phast\System\Database\ORM\Relationships\BelongsTo;
+use Phast\System\Database\ORM\Relationships\BelongsToMany;
 use Phast\System\Database\ORM\Relationships\HasOne;
+use Phast\System\Database\ORM\Relationships\HasManyThrough;
+
 
 trait HasRelationships {
    /**
@@ -57,5 +60,66 @@ trait HasRelationships {
       return new HasOne($instance->newQuery(), $this, $foreignKey, $localKey);
    }
 
-   // Aquí irían hasMany, belongsToMany, etc.
+   /**
+    * Obtiene el valor de una relación. Si ya está cargada, la devuelve.
+    * Si no, la carga desde la base de datos.
+    */
+   public function getRelationValue(string $key) {
+      if (array_key_exists($key, $this->relations)) {
+         return $this->relations[$key];
+      }
+
+      if (method_exists($this, $key)) {
+         $relation = $this->$key();
+         // ¡Importante! La relación se carga aquí al llamar a getResults()
+         return $this->relations[$key] = $relation->getResults();
+      }
+
+      return null;
+   }
+
+   /**
+    * Establece una relación cargada en el modelo. Usado por el Eager Loader.
+    */
+   public function setRelation(string $relation, $value): self {
+      $this->relations[$relation] = $value;
+      return $this;
+   }
+
+   public function setRelations(array $relations): self {
+      foreach ($relations as $relation => $value) {
+         $this->setRelation($relation, $value);
+      }
+      return $this;
+   }
+
+   protected function belongsToMany(string $related, ?string $pivotTable = null, ?string $foreignPivotKey = null, ?string $relatedPivotKey = null): BelongsToMany {
+      $relatedInstance = new $related;
+
+      // Convenciones
+      $foreignPivotKey = $foreignPivotKey ?? strtolower((new \ReflectionClass($this))->getShortName()) . '_id';
+      $relatedPivotKey = $relatedPivotKey ?? strtolower((new \ReflectionClass($related))->getShortName()) . '_id';
+
+      if (is_null($pivotTable)) {
+         $models = [
+            strtolower((new \ReflectionClass($this))->getShortName()),
+            strtolower((new \ReflectionClass($related))->getShortName())
+         ];
+         sort($models);
+         $pivotTable = implode('_', $models);
+      }
+
+      return new BelongsToMany($relatedInstance->newQuery(), $this, $pivotTable, $foreignPivotKey, $relatedPivotKey);
+   }
+
+   protected function hasManyThrough(string $related, string $through, ?string $firstKey = null, ?string $secondKey = null): HasManyThrough {
+      $relatedInstance = new $related;
+      $throughInstance = new $through;
+
+      // Convenciones
+      $firstKey = $firstKey ?? strtolower((new \ReflectionClass($this))->getShortName()) . '_id';
+      $secondKey = $secondKey ?? strtolower((new \ReflectionClass($through))->getShortName()) . '_id';
+
+      return new HasManyThrough($relatedInstance->newQuery(), $this, $throughInstance, $firstKey, $secondKey);
+   }
 }

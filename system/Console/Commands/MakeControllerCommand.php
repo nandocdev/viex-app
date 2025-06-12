@@ -8,6 +8,7 @@
 declare(strict_types=1);
 
 namespace Phast\System\Console\Commands;
+# namespace Phast\System\Console\Commands;
 
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
