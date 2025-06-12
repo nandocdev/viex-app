@@ -1,0 +1,34 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Phast Framework CLI Tool
+ */
+
+// Define la ruta base y carga el autoloader
+define('PHAST_BASE_PATH', __DIR__);
+require_once PHAST_BASE_PATH . '/vendor/autoload.php';
+
+use Phast\System\Core\Application as PhastApplication;
+use Symfony\Component\Console\Application as ConsoleApplication;
+
+// 1. Inicializa la aplicación Phast para tener acceso al contenedor y los servicios.
+// No llamamos a ->run() porque no estamos en un contexto web.
+$phastApp = new PhastApplication(PHAST_BASE_PATH);
+
+// 2. Crea la instancia de la aplicación de consola.
+$consoleApp = new ConsoleApplication('Phast Framework', $phastApp->container->resolve('config')['app']['version'] ?? '1.0.0');
+
+// 3. Registra los comandos.
+// Aquí es donde añadiremos todos nuestros comandos personalizados.
+$consoleApp->add(new \Phast\System\Console\Commands\MakeControllerCommand());
+$consoleApp->add(new \Phast\System\Console\Commands\MakeModelCommand());
+// ... aquí añadiremos más comandos en el futuro ...
+
+// 4. Ejecuta la aplicación de consola.
+try {
+   $consoleApp->run();
+} catch (Exception $e) {
+   // Manejo básico de errores para la consola.
+   echo "Error: " . $e->getMessage() . "\n";
+   exit(1);
+}

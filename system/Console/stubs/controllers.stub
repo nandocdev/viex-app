@@ -1,0 +1,14 @@
+<?php
+
+namespace {{ namespace }};
+
+use Phast\System\Http\Request;
+use Phast\System\Http\Response;
+
+class {{ class }}
+{
+    public function index(Request $request, Response $response)
+    {
+        // Tu lógica aquí...
+    }
+}

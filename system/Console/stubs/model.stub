@@ -1,0 +1,17 @@
+<?php
+
+namespace {{ namespace }};
+
+use Phast\System\Database\ORM\Model;
+
+class {{ class }} extends Model
+{
+    /**
+     * Los atributos que se pueden asignar masivamente.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        //
+    ];
+}

@@ -26,6 +26,9 @@ return [
    Phast\System\Providers\RoutingServiceProvider::class,
    Phast\System\Providers\SessionServiceProvider::class,
 
+   // lee las configuraciones de la aplicación
+   Phast\System\Providers\ConfigServiceProvider::class,
+
    /*
    |--------------------------------------------------------------------------
    | Proveedores de Servicios de la Aplicación (App)
