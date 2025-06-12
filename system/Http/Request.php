@@ -13,7 +13,8 @@
 declare(strict_types=1);
 
 namespace Phast\System\Http;
-
+use Phast\System\Plugins\Validation\Validator;
+use Phast\System\Plugins\Validation\ValidationException;
 class Request {
    protected array $server;
    protected array $cookies;
@@ -452,5 +453,25 @@ class Request {
          }
       }
       return $headers;
+   }
+
+   /**
+    * Valida los datos de la petición contra un conjunto de reglas.
+    *
+    * @param array $rules Las reglas de validación.
+    * @param array $messages Mensajes de error personalizados.
+    * @return array Los datos validados.
+    * @throws ValidationException Si la validación falla.
+    */
+   public function validate(array $rules, array $messages = []): array {
+      $validator = Validator::make($this->getBody(), $rules, $messages);
+
+      if ($validator->fails()) {
+         throw new ValidationException($validator->errors(), $this->getBody());
+      }
+
+      // ¡Importante! Devuelve solo los datos que estaban en las reglas.
+      // Esto previene vulnerabilidades de asignación masiva.
+      return array_intersect_key($this->getBody(), $rules);
    }
 }

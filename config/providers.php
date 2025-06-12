@@ -18,10 +18,13 @@ return [
    | No deberían ser modificados a menos que sepas lo que haces.
    |
    */
+
+   Phast\System\Providers\LogServiceProvider::class,
    Phast\System\Providers\SystemServiceProvider::class,
    Phast\System\Providers\DatabaseServiceProvider::class,
    Phast\System\Providers\ViewServiceProvider::class,
    Phast\System\Providers\RoutingServiceProvider::class,
+   Phast\System\Providers\SessionServiceProvider::class,
 
    /*
    |--------------------------------------------------------------------------

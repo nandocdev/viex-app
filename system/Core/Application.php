@@ -18,16 +18,17 @@ use Dotenv\Dotenv;
 use Phast\System\Http\Request;
 use Phast\System\Http\Response;
 use Phast\System\Routing\RouterManager;
+use Phast\System\Http\Exceptions\TokenMismatchException; // Asegúrate de importar la excepción de token CSRF
+use Psr\Log\LoggerInterface;
+use Whoops\Handler\PrettyPageHandler;
+use Whoops\Run as Whoops;
 
-// --- NUEVAS IMPORTACIONES NECESARIAS ---
-use Phast\System\Rendering\Contracts\ViewEngine;
-use Phast\System\Rendering\Engines\PhpEngine; // ¡IMPORTANTE: Corregido de PhpEnginer a PhpEngine!
-use Phast\System\Rendering\Core\DataHandler;
-use Phast\System\Rendering\Core\TemplateLoader;
-use Phast\System\Rendering\Render; // La clase principal Render
+
 use Phast\System\Plugins\Session\SessionManager; // Si necesitas manejar sesiones, asegúrate de que SessionManager esté importado
 // ---------------------------------------
 use Phast\System\Core\Contracts\ServiceProviderInterface; // ¡Añadir esta!
+
+use Phast\System\Plugins\Validation\ValidationException;
 
 use Throwable;
 
@@ -117,11 +118,91 @@ class Application {
       echo $response->getBody();
    }
 
-   protected function handleException(Throwable $e): void {
-      // Ahora podemos usar el getStatusCode() de nuestras excepciones personalizadas.
-      $statusCode = method_exists($e, 'getCode') ? $e->getCode() : 500;
+   // protected function handleException(Throwable $e): void {
+   //    // Ahora podemos usar el getStatusCode() de nuestras excepciones personalizadas.
+   //    $statusCode = method_exists($e, 'getCode') ? $e->getCode() : 500;
 
-      $message = $_ENV['APP_DEBUG'] === 'true'
+   //    $message = $_ENV['APP_DEBUG'] === 'true'
+   //       ? $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine()
+   //       : 'Server Error';
+
+   //    $response = new Response($message, $statusCode);
+   //    $this->sendResponse($response);
+   // }
+
+   protected function handleException(Throwable $e): void {
+      // --- NUEVO BLOQUE PARA MANEJAR ERRORES DE VALIDACIÓN ---
+      if ($e instanceof ValidationException) {
+         // Para esto, necesitarás un sistema de sesión que soporte "flashing"
+         // (datos que solo duran una petición). Por ahora, asumiremos que
+         // $_SESSION puede usarse directamente.
+
+         // ¡Advertencia! Esto requiere que la sesión ya esté iniciada.
+         // Lo ideal es tener un SessionManager que se encargue de esto.
+         if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+         }
+
+         $_SESSION['_flash'] = [
+            'errors' => $e->getErrors(),
+            'old' => $e->getOldInput(),
+         ];
+
+         $previousUrl = $_SERVER['HTTP_REFERER'] ?? '/';
+         $response = (new Response())->redirect($previousUrl);
+         $this->sendResponse($response);
+         return; // Detiene la ejecución aquí
+      }
+      // --- FIN DEL NUEVO BLOQUE ---
+
+      // --- NUEVO BLOQUE PARA MANEJAR CSRF ---
+      if ($e instanceof TokenMismatchException) {
+         // Simplemente mostramos un error 419.
+         // Podrías crear una vista bonita para esto.
+         $response = new Response('Page Expired', 419);
+         $this->sendResponse($response);
+         return;
+      }
+      // --- FIN DEL NUEVO BLOQUE ---
+
+      // Código existente para manejar otras excepciones
+      $statusCode = method_exists($e, 'getCode') && $e->getCode() >= 400 ? $e->getCode() : 500;
+
+      // --- MANEJO DE ERRORES GENERALES ---
+      $isDevelopment = ($_ENV['APP_ENV'] ?? 'production') === 'local' || ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
+
+      if ($isDevelopment) {
+         // ENTORNO DE DESARROLLO: Usa Whoops para una página de error detallada.
+         $whoops = new Whoops();
+         $whoops->pushHandler(new PrettyPageHandler());
+         $whoops->handleException($e);
+      } else {
+         // ENTORNO DE PRODUCCIÓN: Loguea el error y muestra una página genérica.
+         try {
+            // 1. Loguear el error
+            $logger = $this->container->resolve(LoggerInterface::class);
+            $logger->error(
+               $e->getMessage(),
+               ['exception' => $e] // Monolog sabe cómo formatear esto.
+            );
+
+            // 2. Mostrar una vista de error genérica
+            $statusCode = method_exists($e, 'getCode') && $e->getCode() >= 400 ? $e->getCode() : 500;
+            $response = (new Response())
+               ->status($statusCode)
+               ->view('errors/500', [], 'default'); // Asumiendo un layout simple
+
+            $this->sendResponse($response);
+         } catch (Throwable $fatalError) {
+            // Si incluso el logging o la vista fallan, muestra un error simple.
+            http_response_code(500);
+            echo 'A fatal error occurred. Please check the server logs.';
+            // Loguea el error fatal directamente si es posible.
+            error_log('Fatal error in exception handler: ' . $fatalError->getMessage());
+         }
+      }
+
+      $message = ($_ENV['APP_ENV'] ?? 'production') === 'true'
          ? $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine()
          : 'Server Error';
 

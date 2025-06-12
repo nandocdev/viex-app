@@ -15,7 +15,7 @@ namespace Phast\System\Plugins\Session;
 
 class SessionManager {
    private static bool $sessionStarted = false;
-
+   protected const TOKEN_KEY = '_token';
    /**
     * Inicia o reanuda la sesión PHP con configuraciones seguras.
     * Los parámetros de la cookie de sesión se obtienen de las variables de entorno.
@@ -102,4 +102,38 @@ class SessionManager {
       }
       self::$sessionStarted = false;
    }
+
+   /**
+    * Obtiene el token CSRF actual de la sesión.
+    */
+   public function getToken(): ?string {
+      return $this->get(self::TOKEN_KEY);
+   }
+
+   /**
+    * Genera un nuevo token CSRF, lo guarda en la sesión y lo devuelve.
+    * Es crucial para asegurar que cada sesión tenga su propio token.
+    */
+   public function regenerateToken(): string {
+      // bin2hex(random_bytes(32)) genera un token criptográficamente seguro.
+      $token = bin2hex(random_bytes(32));
+      $this->set(self::TOKEN_KEY, $token);
+      return $token;
+   }
+
+   /**
+    * Compara un token dado con el que está en la sesión de forma segura
+    * para prevenir ataques de temporización (timing attacks).
+    */
+   public function validateToken(?string $token): bool {
+      $sessionToken = $this->getToken();
+
+      if (!$sessionToken || !$token) {
+         return false;
+      }
+
+      // ¡Usa hash_equals para una comparación segura!
+      return hash_equals($sessionToken, $token);
+   }
+
 }

@@ -1,67 +1,101 @@
 <?php
-
 /**
  * @package     phast/system
  * @subpackage  Database
  * @file        Database
  * @author      Fernando Castillo <nando.castillo@outlook.com>
- * @date        2025-06-09 00:00:05
- * @version     1.0.0
- * @description
+ * @date        2025-06-09
+ * @version     2.0.0
+ * @description Fachada principal para la ejecución de consultas SQL.
  */
 
 declare(strict_types=1);
 
 namespace Phast\System\Database;
 
-use Phast\System\Core\Container;
-use Phast\System\Database\DatabaseManager;
+use PDO;
 use Closure;
 use Throwable;
 
 class Database {
-   private ?\PDO $pdo = null;
-   private DatabaseManager $manager;
-   protected string $sql;
+   /** La instancia del gestor de conexiones. */
+   protected DatabaseManager $manager;
 
+   /** La conexión PDO activa para esta instancia. */
+   protected ?PDO $pdo = null;
+
+   /**
+    * @param DatabaseManager $manager El gestor de conexiones.
+    */
    public function __construct(DatabaseManager $manager) {
       $this->manager = $manager;
    }
 
-   public function getPdo(): \PDO {
+   /**
+    * Obtiene la instancia de PDO activa de la conexión por defecto.
+    * Utiliza "lazy loading" para obtenerla solo cuando se necesita.
+    */
+   public function getPdo(): PDO {
       if ($this->pdo === null) {
-         $this->pdo = $this->manager->getConnection();
+         // Obtiene la instancia de Connection y luego la instancia de PDO.
+         $this->pdo = $this->manager->connection()->getPdo();
       }
       return $this->pdo;
    }
 
+   // --- Métodos de Ejecución Directa de Consultas (Raw SQL) ---
 
-
+   /**
+    * Ejecuta una consulta SQL y devuelve el PDOStatement.
+    * Es la base para todas las demás operaciones de consulta.
+    */
    public function query(string $sql, array $bindings = []): \PDOStatement {
       $stmt = $this->getPdo()->prepare($sql);
       $stmt->execute($bindings);
       return $stmt;
    }
 
+   /**
+    * Ejecuta una consulta SELECT y devuelve un array de resultados.
+    */
    public function select(string $sql, array $bindings = []): array {
       return $this->query($sql, $bindings)->fetchAll();
    }
 
+   /**
+    * Ejecuta una consulta SELECT y devuelve la primera fila.
+    */
    public function selectOne(string $sql, array $bindings = []): ?array {
       $result = $this->query($sql, $bindings)->fetch();
       return $result === false ? null : $result;
    }
 
+   /**
+    * Ejecuta una sentencia INSERT. Devuelve true si la inserción fue exitosa.
+    */
    public function insert(string $sql, array $bindings = []): bool {
       return $this->query($sql, $bindings)->rowCount() > 0;
    }
 
+   /**
+    * Ejecuta una sentencia UPDATE. Devuelve el número de filas afectadas.
+    */
    public function update(string $sql, array $bindings = []): int {
       return $this->query($sql, $bindings)->rowCount();
    }
 
+   /**
+    * Ejecuta una sentencia DELETE. Devuelve el número de filas afectadas.
+    */
    public function delete(string $sql, array $bindings = []): int {
       return $this->query($sql, $bindings)->rowCount();
+   }
+
+   /**
+    * Obtiene el ID del último registro insertado.
+    */
+   public function lastInsertId(): string {
+      return $this->getPdo()->lastInsertId();
    }
 
    // --- Métodos de Transacción ---
@@ -79,7 +113,9 @@ class Database {
    }
 
    /**
-    * Ejecuta una operación dentro de una transacción.
+    * Ejecuta una operación dentro de una transacción de forma segura.
+    * Si el callback lanza una excepción, hace rollback automáticamente.
+    * Si el callback termina exitosamente, hace commit.
     *
     * @param Closure $callback La lógica a ejecutar.
     * @return mixed El resultado del callback.
@@ -94,33 +130,20 @@ class Database {
          return $result;
       } catch (Throwable $e) {
          $this->rollBack();
-         throw $e; // Re-lanza la excepción después de hacer rollback
+         throw $e; // Re-lanza la excepción después de hacer rollback.
       }
    }
 
-   public function lastInsertId(): string {
-      return $this->getPdo()->lastInsertId();
-   }
+   // --- Integración con Query Builder ---
 
-   // con el datos de cantidad de registros, se puede paginar los resultados
-   public function paginate(string $selectSql, string $countSql, array $bindings = [], int $perPage = 15, int $page = 1): array {
-      $total = (int) $this->query($countSql, $bindings)->fetchColumn();
-      $offset = ($page - 1) * $perPage;
-
-      // Modifica la consulta original para incluir LIMIT y OFFSET
-      $paginatedSql = $selectSql . " LIMIT :limit OFFSET :offset";
-      $bindings[':limit'] = $perPage;
-      $bindings[':offset'] = $offset;
-
-      // Ejecuta la consulta paginada
-      $results = $this->select($paginatedSql, $bindings);
-
-      return [
-         'data' => $results,
-         'total' => $total,
-         'per_page' => $perPage,
-         'current_page' => $page,
-         'last_page' => (int) ceil($total / $perPage),
-      ];
+   /**
+    * Inicia una nueva consulta fluida usando el Query Builder.
+    * Este es el punto de entrada para construir consultas de forma programática.
+    *
+    * @param string $table El nombre de la tabla.
+    * @return QueryBuilder
+    */
+   public function table(string $table): QueryBuilder {
+      return (new QueryBuilder($this))->table($table);
    }
 }

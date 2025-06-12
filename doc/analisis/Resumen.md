@@ -1,289 +1,168 @@
-De acuerdo. He realizado un análisis exhaustivo de la base de código del framework "Phast" que has proporcionado.
+¡Excelente pregunta! Ahora que tienes una base sólida y bien estructurada, es el momento perfecto para añadir las capas de funcionalidad que transforman un "núcleo" en un "framework" completo y robusto, listo para producción.
 
-A continuación, presento mis hallazgos y recomendaciones, estructurados por áreas de mejora clave, siguiendo el formato solicitado.
+Como programador senior, te guiaré por un camino lógico, priorizando la seguridad y la experiencia del desarrollador (Developer Experience - DX).
 
-### Resumen Ejecutivo
-
-El proyecto "Phast" presenta una base sólida y prometedora para un framework minimalista. Se aprecian decisiones de diseño modernas, como el uso de un contenedor de dependencias con auto-resolución, un sistema de enrutamiento desacoplado y el enfoque en PHP 8.1+. El código demuestra un buen entendimiento de la inyección de dependencias y la separación de componentes.
-
-Mi análisis se centra en refinar la arquitectura, fortalecer la seguridad, mejorar la robustez y la experiencia del desarrollador, llevando el proyecto de una base sólida a un nivel de producción profesional.
+Aquí tienes una lista de funcionalidades, ordenadas por prioridad, con una explicación de por qué son importantes y cómo podrías empezar a implementarlas.
 
 ---
 
-### Análisis Detallado
+### Prioridad Alta: Fundamentos de Seguridad y Usabilidad
 
-#### 1. Arquitectura y Diseño (SOLID, Acoplamiento)
+Estas son características no negociables para cualquier aplicación web moderna.
 
-🔍 **Problema: Acoplamiento del Service Container (Patrón Singleton)**
+#### 1. Sistema de Validación de Datos
 
-La clase `Container` está implementada como un Singleton (`Container::getInstance()`). Esto es un antipatrón conocido como _Service Locator_, que introduce estado global y acopla fuertemente cualquier clase que lo use directamente, dificultando las pruebas y ocultando las dependencias reales de una clase. Clases como `TemplateLoader` y `Response` llaman directamente a `Container::getInstance()`, lo cual es una violación del Principio de Inversión de Dependencias (DIP).
+-  **¿Qué es?** Una forma de definir reglas para los datos que llegan en una petición (`Request`) y verificar si cumplen con esas reglas (ej: `email`, `required`, `min:8`, `numeric`).
+-  **¿Por qué es importante?** Es tu primera línea de defensa. **Nunca confíes en los datos del usuario.** La validación previene datos corruptos en tu base de datos, errores inesperados y es fundamental para la seguridad.
+-  **¿Cómo empezar?**
+   1. Crea una clase `Validator` que reciba los datos (`$request->getBody()`) y un array de reglas (ej: `['email' => 'required|email', 'password' => 'required|min:8']`).
+   2. El `Validator` itera sobre cada campo y aplica las reglas una por una.
+   3. Tendrá métodos como `passes()` (devuelve `true`/`false`) y `errors()` (devuelve un array con los mensajes de error).
+   4. Puedes integrarlo en tu clase `Request` con un método `validate(array $rules)` que lance una `ValidationException` si la validación falla. La excepción puede ser capturada por tu manejador de excepciones para redirigir al usuario al formulario anterior con los errores.
 
-🛠 **Solución: Inyección de Dependencias Explícita**
+#### 2. Protección contra CSRF (Cross-Site Request Forgery)
 
-La instancia del contenedor debe ser creada una sola vez en el punto de entrada (`Application`) y pasada explícitamente a las clases que la necesiten, o mejor aún, usar el propio contenedor para inyectar las dependencias finales, no el contenedor en sí.
+-  **¿Qué es?** Un mecanismo que asegura que las peticiones que modifican el estado de la aplicación (formularios `POST`, `PUT`, `DELETE`) provienen realmente de tu propia aplicación y no de un sitio malicioso externo.
+-  **¿Por qué es importante?** Previene que un atacante pueda engañar a un usuario autenticado para que realice acciones no deseadas sin su conocimiento (ej: cambiar su contraseña, transferir dinero, etc.).
+-  **¿Cómo empezar?**
+   1. Crea un `Middleware` llamado `VerifyCsrfToken`.
+   2. En las peticiones `GET`, este middleware genera un token único y lo guarda en la sesión del usuario.
+   3. Crea una función o helper (ej: `csrf_field()`) que genere un campo de formulario oculto con este token: `<input type="hidden" name="_token" value="EL_TOKEN_DE_LA_SESION">`.
+   4. En las peticiones `POST`, `PUT`, `PATCH`, `DELETE`, el middleware compara el `_token` que llega en la petición con el que está guardado en la sesión. Si no coinciden o no existe, lanza una excepción (ej: `TokenMismatchException` con código 419).
 
-**Ejemplo en `TemplateLoader`:**
+#### 3. Manejo de Errores y Logging Mejorado (PSR-3)
 
-```php
-// system/Rendering/Core/TemplateLoader.php
-
-// --- Antes ---
-class TemplateLoader {
-   public function __construct() {
-      // Acoplamiento fuerte al contenedor y a Application
-      $basePath = Container::getInstance()->resolve(Application::class)->basePath;
-      // ...
-   }
-}
-
-// --- Después (Solución Propuesta) ---
-class TemplateLoader {
-   // ...
-   // Recibe sus dependencias directas, no el contenedor
-   public function __construct(private readonly string $basePath) {
-      $this->layoutsBasePath = rtrim($this->basePath . '/resources/views/layouts', self::DS) . self::DS;
-      // ...
-   }
-}
-
-// En Application::registerServices(), inyectamos la dependencia:
-$this->container->singleton(TemplateLoader::class, function ($c) {
-    return new TemplateLoader($c->resolve(Application::class)->basePath);
-});
-```
-
-📌 **Buenas prácticas**:
-
--  **SOLID (DIP)**: Las clases deben depender de abstracciones (o datos simples como `string`), no de implementaciones concretas o localizadores de servicios globales.
--  **Inyección de Dependencias**: Favorecer la inyección por constructor para que las dependencias de una clase sean explícitas y claras.
--  **Testabilidad**: El código sin estado global es más fácil de instanciar y probar de forma aislada.
+-  **¿Qué es?** Un sistema robusto que muestra errores detallados y amigables en el entorno de desarrollo (`local`) y muestra una página de error genérica pero útil en producción, mientras registra todos los detalles en un archivo de log.
+-  **¿Por qué es importante?** En desarrollo, acelera la depuración. En producción, protege información sensible del servidor y proporciona un registro vital para solucionar problemas post-mortem.
+-  **¿Cómo empezar?**
+   1. **Manejo de Errores:** Integra una librería como `filp/whoops` (`composer require filp/whoops`). En tu `Application::handleException`, si `APP_ENV` es `local`, usas `Whoops` para mostrar una página de error detallada. Si es `production`, muestras una vista de error genérica (`500.phtml`).
+   2. **Logging:** Integra una librería de logging compatible con PSR-3 como `monolog/monolog` (`composer require monolog/monolog`). Crea un `LogServiceProvider` que registre el logger en el contenedor. Puedes configurarlo para escribir en archivos, Slack, etc., basándote en la configuración de `.env`.
 
 ---
 
-🔍 **Problema: Uso de la función `extract()`**
+### Prioridad Media: Mejoras de DX y Escalabilidad
 
-La función `extract()` se utiliza en `Connection.php` y `PhpEnginer.php`. Esta función es considerada una mala práctica por varias razones:
+Estas características hacen que desarrollar con tu framework sea mucho más rápido, agradable y potente.
 
-1. **Oscurece el código**: Introduce variables en el ámbito local de forma "mágica", haciendo difícil saber de dónde provienen (`$host`, `$database`, etc.).
-2. **Riesgo de colisión**: Puede sobrescribir variables existentes en el ámbito actual de forma inesperada.
-3. **Seguridad**: Si se usa con datos no confiables (como `$_GET`), puede llevar a vulnerabilidades de sobreescritura de variables.
+#### 4. Query Builder
 
-🛠 **Solución: Acceso explícito a los arrays**
+-  **¿Qué es?** Una API fluida para construir consultas SQL de forma programática, en lugar de escribir SQL a mano.
+-  **¿Por qué es importante?**
+   -  Reduce drásticamente los errores de sintaxis SQL.
+   -  Hace el código mucho más legible y mantenible.
+   -  Abstrae las diferencias sutiles entre motores de bases de datos (MySQL, PostgreSQL).
+   -  Sigue manejando los _bindings_ de parámetros automáticamente, previniendo inyecciones SQL.
+-  **¿Cómo empezar?**
+   1. Crea una clase `QueryBuilder` que defina las cláusulas SQL más comunes que debería poder construir o representar en sus métodos son las que permiten las operaciones CRUD (Crear, Leer, Actualizar, Borrar) y una consulta básica.
 
-Reemplazar `extract()` por accesos explícitos a las claves del array. Esto hace el código más legible, predecible y seguro.
+Aquí tienes una lista de las cláusulas SQL más comunes y su propósito en el contexto de un ORM:
 
-**Ejemplo en `Connection::getDsn()`:**
+1. **`SELECT`**:
 
-```php
-// system/Database/Connection.php
+   -  **Propósito:** Especifica las columnas que quieres recuperar de una tabla.
+   -  **Uso en ORM:** Implícito en la mayoría de las operaciones de lectura (ej. `find()`, `get()`, `all()`). Un ORM básico a menudo hace `SELECT *` por defecto, pero podría tener un método como `select('col1', 'col2')` para especificar columnas.
 
-// --- Antes ---
-private function getDsn(array $config): string {
-    extract($config); // Malas prácticas
-    switch ($driver) {
-       case 'mysql':
-          return "mysql:host={$host};port={$port};...";
-       // ...
-    }
-}
+2. **`FROM`**:
 
-// --- Después (Solución Propuesta) ---
-private function getDsn(array $config): string {
-    $driver = $config['driver'] ?? null;
-    switch ($driver) {
-        case 'mysql':
-            return sprintf(
-                "mysql:host=%s;port=%s;dbname=%s;charset=%s",
-                $config['host'],
-                $config['port'],
-                $config['database'],
-                $config['charset']
-            );
-        case 'pgsql':
-            // ... acceso explícito similar
-        case 'sqlite':
-            // ...
-        default:
-            throw new InvalidArgumentException("Unsupported database driver [{$driver}].");
-    }
-}
-```
+   -  **Propósito:** Indica de qué tabla(s) se van a obtener los datos.
+   -  **Uso en ORM:** Generalmente inferido del nombre del modelo (ej. `User::all()` implicaría `FROM users`). El ORM tiene una propiedad (`protected string $table`) para definir la tabla.
 
-📌 **Buenas prácticas**:
+3. **`WHERE`**:
 
--  **KISS (Keep It Simple, Stupid)**: El código explícito es más simple de entender que el implícito.
--  **Legibilidad**: El código es claro sobre el origen de cada variable.
+   -  **Propósito:** Filtra los registros basándose en una o más condiciones.
+   -  **Uso en ORM:** Es una de las cláusulas más importantes y comunes. Se usa en métodos como `where('col', '=', 'value')`, `find(id)`, `update()`, `delete()`.
+   -  **Operadores Lógicos (`AND`, `OR`):** Para combinar múltiples condiciones de filtrado (ej. `where('col1', '=', 'v1')->orWhere('col2', '>', 'v2')`).
+   -  **Operadores de Comparación (`=`, `!=`, `<`, `>`, `<=`, `>=`):** Para comparar valores.
+   -  **`LIKE`**: Para búsqueda de patrones (ej. `where('name', 'LIKE', '%fernando%')`).
+   -  **`IN` / `NOT IN`**: Para verificar si un valor está o no en una lista (ej. `whereIn('id', [1, 2, 3])`).
+   -  **`IS NULL` / `IS NOT NULL`**: Para verificar valores nulos.
 
----
+4. **`INSERT INTO ... VALUES`**:
 
-🔍 **Problema: Implementación frágil de la paginación**
+   -  **Propósito:** Inserta nuevas filas (registros) en una tabla.
+   -  **Uso en ORM:** En métodos como `create(array $data)` o cuando se guardan nuevas instancias de un modelo (ej. `$user = new User(); $user->name = '...'; $user->save();`).
 
-El método `Database::paginate()` utiliza `preg_replace` para convertir una consulta `SELECT` en una consulta `SELECT COUNT(*)`. Esto es extremadamente frágil y fallará con consultas SQL más complejas (ej. que contengan subconsultas en la cláusula `SELECT`, `GROUP BY`, `HAVING`, o `UNION`).
+5. **`UPDATE ... SET ... WHERE`**:
 
-🛠 **Solución: Requerir una Query Builder o un enfoque más robusto**
+   -  **Propósito:** Modifica los datos de filas existentes en una tabla.
+   -  **Uso en ORM:** En métodos como `update(array $data)` o cuando se guardan cambios en instancias existentes (ej. `$user->name = 'new name'; $user->save();`). La cláusula `WHERE` es crucial para saber qué registro actualizar.
 
-A largo plazo, la única solución robusta es un **Query Builder** que pueda construir la consulta `COUNT` de forma programática. A corto plazo, una mejora significativa sería refactorizar el método para que no intente "adivinar" la consulta de conteo.
+6. **`DELETE FROM ... WHERE`**:
 
-**Alternativa 1 (Simple y segura):** Obligar al desarrollador a pasar dos consultas.
+   -  **Propósito:** Elimina filas de una tabla.
+   -  **Uso en ORM:** En métodos como `delete()` en una instancia de modelo (ej. `$user->delete();`) o `destroy(id)`/`where(...)->delete()`. La cláusula `WHERE` es vital para saber qué registro borrar.
 
-```php
-public function paginate(string $selectSql, string $countSql, array $bindings = [], int $perPage = 15, int $page = 1): array {
-    $total = (int) $this->query($countSql, $bindings)->fetchColumn();
-    // ... resto de la lógica ...
-}
-```
+7. **`ORDER BY`**:
 
-**Alternativa 2 (Query Builder Conceptual):**
+   -  **Propósito:** Ordena el conjunto de resultados por una o más columnas, ya sea de forma ascendente (`ASC`) o descendente (`DESC`).
+   -  **Uso en ORM:** En métodos como `orderBy('created_at', 'DESC')`.
 
-```php
-// Esto es para ilustrar el concepto, requeriría una refactorización mayor.
-$paginator = DB::table('users')->where('active', '=', 1)->paginate(15);
-```
+8. **`LIMIT` / `OFFSET`**:
 
-📌 **Buenas prácticas**:
+   -  **Propósito:**
+      -  `LIMIT`: Restringe el número de filas que se devuelven en el conjunto de resultados.
+      -  `OFFSET`: Especifica a partir de qué fila se empiezan a devolver los resultados (útil para paginación).
+   -  **Uso en ORM:** En métodos como `limit(10)`, `offset(20)`, o combinados para paginación (ej. `paginate(10, 2)`).
 
--  **Robustez**: Evitar soluciones "mágicas" basadas en regex para manipular código estructurado como SQL.
--  **Claridad de la API**: El desarrollador debe tener control sobre la consulta de conteo para optimizarla.
+9. **`JOIN` (especialmente `INNER JOIN` y `LEFT JOIN`)**:
 
-⚠️ **Riesgos**: La implementación actual puede causar errores 500 impredecibles con consultas no triviales y devolver resultados de paginación incorrectos.
+   -  **Propósito:** Combina filas de dos o más tablas basándose en una columna relacionada entre ellas.
+   -  **Uso en ORM:** En un ORM "básico", podría usarse para relaciones simples como `hasOne` o `belongsTo`, o a través de un método `join('other_table', 'fk_col', '=', 'pk_col')`. Un ORM más avanzado manejaría esto de forma más abstracta (relaciones definidas en el modelo).
 
----
+10.   **Funciones de Agregación (`COUNT()`, `SUM()`, `AVG()`, `MIN()`, `MAX()`):**
 
-#### 2. Seguridad
+      -  **Propósito:** Realizan un cálculo sobre un conjunto de filas y devuelven un único valor.
+      -  **Uso en ORM:** Métodos como `count()`, `sum('amount')`, `avg('price')`.
 
-🔍 **Problema: Sanitización prematura y genérica en la clase `Request`**
+11.   **`GROUP BY`**:
 
-La clase `Request` sanitiza automáticamente todos los datos de entrada (`GET`, `POST`) con `FILTER_SANITIZE_SPECIAL_CHARS` en `parseBody()`. Esto es problemático:
+      -  **Propósito:** Agrupa filas que tienen los mismos valores en una o más columnas en un conjunto de filas de resumen. Se usa a menudo con funciones de agregación.
+      -  **Uso en ORM:** Método `groupBy('category_id')`.
 
-1. **Contexto incorrecto**: La sanitización debe ocurrir en el momento de la _salida_, no en la entrada. El tipo de sanitización depende del contexto (HTML, URL, atributo JS, etc.).
-2. **Pérdida de datos**: Si un usuario envía legítimamente un carácter como `<` o `>` en un campo (ej., en un bloque de código), este se corromperá antes de que la aplicación pueda procesarlo.
+12.   **`HAVING`**:
+      -  **Propósito:** Filtra los grupos creados por la cláusula `GROUP BY`. Es como un `WHERE` pero para grupos.
+      -  **Uso en ORM:** Método `having('total_sales', '>', 1000)`.
 
-🛠 **Solución: "Filter Input, Escape Output"**
+Para un **ORM realmente básico**, las más fundamentales serían: `SELECT`, `FROM`, `WHERE` (con operadores básicos), `INSERT`, `UPDATE`, `DELETE`, `ORDER BY`, `LIMIT`/`OFFSET`. Las uniones (`JOIN`) y agregaciones (`COUNT`, `GROUP BY`, `HAVING`) a menudo se introducen un poco después, pero son muy comunes incluso en ORMs relativamente básicos.
 
-El objeto `Request` debe ser un contenedor inmutable de los datos **brutos y no confiables** de la petición. La responsabilidad de escapar los datos recae en la capa de la vista o en el código que genera la salida.
+#### 5. CLI (Herramienta de Comandos) - "Phast Artisan"
 
-**Ejemplo en `Request::parseBody()`:**
+-  **¿Qué es?** Un script de consola para automatizar tareas comunes, como crear controladores, modelos, migraciones, etc.
+-  **¿Por qué es importante?** Acelera el desarrollo enormemente. Es la marca de un framework profesional.
+-  **¿Cómo empezar?**
+   1. Integra el componente `symfony/console` (`composer require symfony/console`). Es el estándar de la industria.
+   2. Crea un archivo en la raíz de tu proyecto llamado `phast` (o como quieras llamarlo).
+   3. Este archivo inicializa tu `Application` (para tener acceso al contenedor) y la `Symfony\Component\Console\Application`.
+   4. Crea un directorio `app/Console/Commands` donde vivirán tus clases de comando (ej: `MakeControllerCommand.php`). Cada clase extenderá de `Symfony\Component\Console\Command` y contendrá la lógica para generar el archivo correspondiente (usando plantillas "stub").
 
-```php
-// system/Http/Request.php
+#### 6. Sistema de Migraciones de Base de Datos
 
-// --- Antes ---
-foreach ($_GET as $key => $value) {
-   $body[$key] = filter_input(INPUT_GET, $key, FILTER_SANITIZE_SPECIAL_CHARS);
-}
-
-// --- Después (Solución Propuesta) ---
-protected function parseBody(): array {
-    // Simplemente combina los datos crudos. Sin sanitización aquí.
-    $body = $_GET;
-    if ($this->method === 'POST') {
-        $body = array_merge($body, $_POST);
-    }
-    // ... resto de la lógica para JSON, etc.
-    return $body;
-}
-```
-
-**En la Vista (ej. `mi_vista.phtml`):**
-
-```php
-<!-- Correcto: Escapar en el punto de salida -->
-<h1>Bienvenido, <?= htmlspecialchars($nombreUsuario, ENT_QUOTES, 'UTF-8') ?></h1>
-```
-
-📌 **Buenas prácticas**:
-
--  **OWASP (XSS)**: La regla principal es escapar todos los datos no confiables según el contexto de salida.
--  **Principio de Responsabilidad Única**: La clase `Request` es responsable de representar la petición, no de sanitizarla para todos los posibles contextos de salida.
-
-⚠️ **Riesgos**: Aunque la intención es buena, la sanitización actual da una falsa sensación de seguridad y puede corromper datos legítimos.
+-  **¿Qué es?** Una forma de versionar los cambios de tu esquema de base de datos en archivos PHP, similar a como Git versiona tu código.
+-  **¿Por qué es importante?** Permite que tu equipo de desarrollo mantenga sus esquemas de BBDD sincronizados fácilmente. Hace que el despliegue sea reproducible y automatizable. Es una práctica fundamental en el desarrollo profesional.
+-  **¿Cómo empezar?**
+   1. Necesitarás una tabla en tu base de datos (ej: `migrations`) para llevar un registro de qué migraciones ya se han ejecutado.
+   2. Usando tu nueva herramienta CLI (`symfony/console`), crea comandos como:
+      -  `php phast make:migration create_users_table`: Crea un nuevo archivo de migración en `database/migrations/`.
+      -  `php phast migrate`: Ejecuta todas las migraciones pendientes.
+      -  `php phast migrate:rollback`: Revierte el último lote de migraciones.
+   3. Cada archivo de migración tiene un método `up()` (para aplicar los cambios, usando tu Query Builder o un Schema Builder) y un `down()` (para revertirlos).
 
 ---
 
-🔍 **Problema: Ausencia de protección contra CSRF (Cross-Site Request Forgery)**
+### Prioridad Baja: Características Avanzadas
 
-El framework no parece tener un mecanismo integrado para prevenir ataques CSRF. Esto es una vulnerabilidad crítica para cualquier aplicación que maneje acciones que cambian el estado (ej. formularios `POST`, `PUT`, `DELETE`).
+Estas características son potentes pero más complejas de implementar. Son las que llevan un framework de "bueno" a "excelente".
 
-🛠 **Solución: Implementar un sistema de Tokens CSRF**
+-  **7. ORM (Object-Relational Mapper):** Como Eloquent de Laravel. Permite interactuar con tus tablas de la BBDD como si fueran objetos PHP (`User::find(1)`, `$user->posts()->create(...)`). Es un gran proyecto, pero puedes empezar creando una clase `Model` base que use tu Query Builder.
+-  **8. Sistema de Colas (Queues):** Para ejecutar tareas largas en segundo plano (enviar emails, procesar videos) sin que el usuario tenga que esperar. Esto requiere un `worker` y drivers para sistemas como Redis o Beanstalkd.
+-  **9. Sistema de Eventos y Listeners:** Un patrón para desacoplar aún más tu aplicación. Disparas un evento (`UserRegistered`) y múltiples listeners pueden reaccionar a él (enviar email de bienvenida, crear un perfil, etc.).
+-  **10. Caché Avanzada (PSR-6/PSR-16):** Un sistema de caché para datos de la aplicación, no solo para rutas. Con drivers para `file`, `redis`, `memcached`, etc.
 
-1. **Generación**: En el `SessionManager` o una clase dedicada, generar un token único por sesión.
-2. **Inyección**: Crear una función o helper (ej. `csrf_token()` y `csrf_field()`) que pueda ser llamada en las vistas para obtener el token e insertar un campo oculto en los formularios.
-3. **Validación**: Crear un `VerifyCsrfToken` middleware. Este middleware debe ser aplicado por defecto a todas las rutas que no sean `GET` o `HEAD`. Comprobará que el token enviado en la petición (`_token`) coincide con el almacenado en la sesión.
+### En resumen, te sugiero este camino:
 
-📌 **Buenas prácticas**:
+1. **Ahora mismo:** Implementa **Validación** y **Protección CSRF**. Son vitales para la seguridad.
+2. **Después:** Mejora el **Manejo de Errores y Logging**.
+3. **Luego:** Empieza el gran proyecto del **Query Builder** y la **Herramienta CLI**.
+4. **Finalmente:** Usa tu CLI para construir el sistema de **Migraciones**.
 
--  **OWASP (CSRF)**: Implementar el patrón de _Synchronizer Token_ es el método estándar de defensa.
--  **Middleware**: La validación CSRF es un caso de uso perfecto para un middleware, ya que es una preocupación transversal (cross-cutting concern).
-
-⚠️ **Riesgos**: Sin protección CSRF, un atacante puede engañar a un usuario autenticado para que realice acciones no deseadas en la aplicación.
-
----
-
-#### 3. Calidad de Código y Mantenibilidad
-
-🔍 **Problema: Typo en nombre de clase `PhpEnginer`**
-
-Hay un error de tipeo en `system/Rendering/Engines/PhpEnginer.php` y sus referencias en `Application.php`. Debería ser `PhpEngine`.
-
-🛠 **Solución: Renombrar el archivo y la clase**
-
-Renombrar el archivo a `PhpEngine.php` y la clase a `PhpEngine`. Actualizar las referencias en `Application.php`. Esto mejora la profesionalidad y la legibilidad.
-
-📌 **Buenas prácticas**:
-
--  **Nomenclatura**: Los nombres de clases y archivos deben ser consistentes y correctos ortográficamente.
-
----
-
-🔍 **Problema: Configuración de entorno no robusta**
-
-El archivo `config/database.php` usa el operador de fusión de null (`??`) para proporcionar valores por defecto. Si una variable de entorno **crítica** como `DB_HOST` o `DB_DATABASE` no está definida en el `.env`, la aplicación no fallará inmediatamente, sino más tarde con un error de conexión críptico.
-
-🛠 **Solución: Validar variables de entorno requeridas**
-
-Usar la funcionalidad de `phpdotenv` para asegurar que las variables esenciales existan al arrancar la aplicación.
-
-**Ejemplo en `Application::loadEnvironment()`:**
-
-```php
-// system/Core/Application.php
-protected function loadEnvironment(): void {
-    $dotenv = Dotenv::createImmutable($this->basePath);
-    $dotenv->load();
-
-    // Falla rápido si faltan variables críticas
-    $dotenv->required([
-        'APP_ENV',
-        'DB_HOST',
-        'DB_DATABASE',
-        'DB_USERNAME'
-    ])->notEmpty();
-}
-```
-
-📌 **Buenas prácticas**:
-
--  **Fail-Fast**: Es mejor que la aplicación falle al inicio con un mensaje claro si su configuración es inválida, en lugar de fallar de forma impredecible durante la ejecución.
-
----
-
-### Propuestas de Mejora y Siguientes Pasos
-
-1. **Introducir Service Providers**: Para desacoplar `Application::registerServices`, crear clases como `DatabaseServiceProvider`, `RoutingServiceProvider`, `ViewServiceProvider`. Cada una tendría un método `register(Container $container)` y la clase `Application` simplemente las iteraría. Esto sigue el Principio de Responsabilidad Única y mejora la modularidad.
-
-2. **Crear una Interfaz de Contrato para la Configuración**: En lugar de que `DatabaseManager` lea un archivo directamente, debería recibir un objeto de configuración (ej. `ConfigRepository`) que implemente una interfaz. Esto permitiría cambiar la fuente de configuración (archivos, base de datos, etc.) sin modificar las clases que la consumen.
-
-3. **Mejorar el Manejo de Excepciones**: La clase `Application` tiene un `handleException` muy básico. Se podría crear un `ExceptionHandler` dedicado, capaz de renderizar diferentes vistas de error según el código de estado (404, 500, 403) y el entorno (`APP_ENV`). En producción mostraría una página de error genérica, y en desarrollo una página detallada (como las de Whoops o Symfony).
-
-4. **Implementar una Herramienta de Línea de Comandos (CLI)**: Utilizando un componente como `symfony/console`, se podría crear un script `phast` en la raíz del proyecto para tareas comunes:
-
-   -  `php phast route:cache` (para ejecutar `RouterManager::clearCache()` y `loadRoutesFromFiles()`).
-   -  `php phast route:list` (para mostrar todas las rutas definidas).
-   -  `php phast make:controller UserController`.
-   -  `php phast make:middleware AuthMiddleware`.
-
-5. **Integrar Herramientas de Análisis Estático**:
-   -  **PHPStan / Psalm**: Para detectar errores de tipos y bugs lógicos antes de la ejecución.
-   -  **Rector**: Para automatizar refactorizaciones y actualizaciones de código.
-   -  **PHP-CS-Fixer**: Para forzar el cumplimiento de los estándares PSR-12 automáticamente.
-      Estas herramientas son indispensables para mantener la calidad del código en un proyecto a largo plazo.
+Si sigues esta hoja de ruta, tu framework Phast se convertirá en una herramienta increíblemente potente y profesional. ¡Adelante
