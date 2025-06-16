@@ -16,17 +16,28 @@ namespace Phast\App\Controllers;
 
 use Phast\System\Http\Response;
 use Phast\System\Http\Request;
-
+use Phast\System\Database\DB;
+use Phast\System\Database\Connection;
 class HomeController {
    public function index(Request $request, Response $response): mixed {
+
+
+      $db = new DB(new Connection());
+      $sql = "SELECT * FROM migrations";
+      $migrations = $db->select()->execute($sql);
       $data = [
          'title' => 'Página de Inicio',
          'welcomeMessage' => '¡Bienvenido a nuestra aplicación Phast!',
          'user' => [
             'name' => 'Jane Doe',
             'role' => 'Admin'
-         ]
+         ],
+         'migrations' => $migrations
       ];
-      return $response->view('Welcome/home', $data);
+
+
+
+      // retorna json
+      return $response->json($data);
    }
 }

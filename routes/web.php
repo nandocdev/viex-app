@@ -8,3 +8,5 @@ use Phast\System\Http\Response;
 use Phast\System\Routing\Facades\Router;
 
 Router::get("/", 'HomeController@index')->name('home.welcome');
+
+echo "Routes loaded successfully.\n";

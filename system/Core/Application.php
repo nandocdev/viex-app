@@ -24,10 +24,8 @@ use Whoops\Handler\PrettyPageHandler;
 use Whoops\Run as Whoops;
 
 
-use Phast\System\Plugins\Session\SessionManager; // Si necesitas manejar sesiones, asegúrate de que SessionManager esté importado
-// ---------------------------------------
-use Phast\System\Core\Contracts\ServiceProviderInterface; // ¡Añadir esta!
-
+use Phast\System\Plugins\Session\SessionManager;
+use Phast\System\Core\Contracts\ServiceProviderInterface;
 use Phast\System\Plugins\Validation\ValidationException;
 
 use Throwable;
@@ -42,13 +40,15 @@ class Application {
       $this->loadEnvironment();
       $this->registerServices();
       $this->loadRoutes();
+      $this->loadAppConfig();
+      $this->loadDatabaseConfig();
+
    }
 
    protected function loadEnvironment(): void {
       $dotenv = Dotenv::createImmutable($this->basePath);
       $dotenv->load();
 
-      // Falla rápido si faltan variables críticas
       $dotenv->required([
          'APP_ENV',
          'DB_HOST',
@@ -83,6 +83,16 @@ class Application {
       }
    }
 
+
+   protected function loadAppConfig(): void {
+      $appConfig = require $this->basePath . "/config/app.php";
+      $this->container->singleton('config', fn() => $appConfig);
+   }
+
+   protected function loadDatabaseConfig(): void {
+      $dbConfig = require $this->basePath . "/config/database.php";
+      $this->container->singleton('database', fn() => $dbConfig);
+   }
 
 
    protected function loadRoutes(): void {

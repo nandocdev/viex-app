@@ -16,31 +16,24 @@ namespace Phast\System\Database;
 use PDO;
 use PDOException;
 use InvalidArgumentException;
+use Phast\System\Core\Container;
 
 class Connection {
-   /**
-    * La instancia de PDO activa. Es null hasta que se solicita la conexión.
-    * @var PDO|null
-    */
    private ?PDO $pdo = null;
-
-   /**
-    * La configuración para esta conexión específica.
-    * @var array
-    */
    private array $config;
-
-   /**
-    * @param array $config El array de configuración para la conexión (host, db, user, etc.).
-    */
-   public function __construct(array $config) {
-      $this->config = $config;
+   private string $connectionName = 'default';
+   public function __construct() {
+      $this->connectionName = Container::getInstance()->resolve('database')['default'] ?? 'default';
+      $this->config = Container::getInstance()->resolve('database')['connections'][$this->connectionName] ?? [];
+      if (empty($this->config)) {
+         throw new InvalidArgumentException("Database configuration is not set or is empty.");
+      }
+      $this->requireConfig($this->config, ['driver']);
+      if (!in_array($this->config['driver'], ['mysql', 'pgsql', 'sqlite', 'sqlsrv'])) {
+         throw new InvalidArgumentException("Unsupported database driver: [{$this->config['driver']}].");
+      }
    }
 
-   /**
-    * Obtiene la instancia de PDO.
-    * Implementa "lazy loading": la conexión solo se crea cuando se necesita por primera vez.
-    */
    public function getPdo(): PDO {
       if ($this->pdo === null) {
          $this->pdo = $this->createPdoInstance();
@@ -48,10 +41,6 @@ class Connection {
       return $this->pdo;
    }
 
-   /**
-    * Crea y configura una nueva instancia de PDO.
-    * @throws PDOException si la conexión falla.
-    */
    private function createPdoInstance(): PDO {
       try {
          return new PDO(
@@ -70,14 +59,9 @@ class Connection {
       }
    }
 
-   /**
-    * Construye el DSN (Data Source Name) string basado en la configuración del driver.
-    * @throws InvalidArgumentException si el driver no está soportado.
-    */
    private function getDsn(array $config): string {
       $driver = $config['driver'] ?? null;
 
-      // El uso de 'required' asegura que no intentemos construir un DSN sin datos clave.
       $this->requireConfig($config, ['host', 'database']);
 
       switch ($driver) {
@@ -111,28 +95,25 @@ class Connection {
       }
    }
 
-   /**
-    * Obtiene las opciones por defecto para la conexión PDO.
-    */
    protected function getOptions(): array {
       return [
-            // Esencial para un manejo de errores robusto.
          PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            // Devuelve arrays asociativos, más intuitivo para la mayoría de casos.
          PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            // ¡Crucial para la seguridad! Usa preparados nativos en lugar de emulados.
          PDO::ATTR_EMULATE_PREPARES => false,
       ];
    }
 
-   /**
-    * Pequeño helper para verificar que existen claves de configuración requeridas.
-    */
    private function requireConfig(array $config, array $keys): void {
       foreach ($keys as $key) {
          if (!array_key_exists($key, $config)) {
             throw new InvalidArgumentException("Missing required configuration key: [{$key}].");
          }
+      }
+   }
+
+   public function close(): void {
+      if ($this->pdo !== null) {
+         $this->pdo = null; // Destruye la instancia de PDO
       }
    }
 }

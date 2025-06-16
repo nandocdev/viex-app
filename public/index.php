@@ -12,6 +12,10 @@
 
 declare(strict_types=1);
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 define('PHAST_BASE_PATH', dirname(__DIR__));
 // 1. Registrar el autoloader de Composer
 require_once PHAST_BASE_PATH . '/vendor/autoload.php';

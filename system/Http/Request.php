@@ -331,6 +331,8 @@ class Request {
     * @return string
     */
    protected function determinePath(): string {
+      // var_dump($this->server);
+
       $path = $this->getServerVar('REQUEST_URI', '/');
       $position = strpos($path, '?');
       $path = $position === false ? $path : substr($path, 0, $position);
