@@ -9,7 +9,7 @@
  * @description
  */
 
-namespace Phast\System\Database\Executor\Contracts;
+namespace Phast\System\Database\CP\Executor\Contracts;
 
 class SqlOperation {
    function __construct() {

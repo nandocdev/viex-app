@@ -6,7 +6,7 @@ use Phast\System\Http\Request;
 use Phast\System\Http\Response;
 
 class {{ class }} {
-    public function index(Request $request, Response $response){
-        // Tu lógica aquí...
+    public function indexAction(Request $request, Response $response){
+        return $response->view('{{ viewPath }}', []);
     }
 }

@@ -4,16 +4,20 @@
  * @subpackage  Database
  * @file        Connection
  * @author      Fernando Castillo <nando.castillo@outlook.com>
- * @date        2025-06-20 00:53:02
+ * @date        2025-06-08
  * @version     1.0.0
- * @description
+ * @description Gestiona una única conexión de base de datos a través de PDO.
  */
+
 declare(strict_types=1);
-namespace Phast\System\Database;
+
+namespace Phast\System\Database\CP;
+
 use PDO;
 use PDOException;
 use InvalidArgumentException;
 use Phast\System\Core\Container;
+
 class Connection {
    private ?PDO $pdo = null;
    private array $config;

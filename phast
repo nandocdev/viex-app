@@ -16,12 +16,13 @@ use Symfony\Component\Console\Application as ConsoleApplication;
 $phastApp = new PhastApplication(PHAST_BASE_PATH);
 
 // 2. Crea la instancia de la aplicación de consola.
-$consoleApp = new ConsoleApplication('Phast Framework', $phastApp->container->resolve('config')['app']['version'] ?? '1.0.0');
+$consoleApp = new ConsoleApplication('Phast Framework', config('app.version', '1.0.0'));
 
 // 3. Registra los comandos.
 // Aquí es donde añadiremos todos nuestros comandos personalizados.
 $consoleApp->add(new \Phast\System\Console\Commands\MakeControllerCommand());
 $consoleApp->add(new \Phast\System\Console\Commands\MakeModelCommand());
+$consoleApp->add(new \Phast\System\Console\Commands\MakeModuleCommand());
 // ... aquí añadiremos más comandos en el futuro ...
 
 // 4. Ejecuta la aplicación de consola.

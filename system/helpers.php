@@ -59,3 +59,31 @@ if (!function_exists('action_buttons')) {
       return AcctionButtons::init($buttons, $params);
    }
 }
+
+// camel_case 
+if (!function_exists('camel_case')) {
+   /**
+    * Convierte un string a formato CamelCase.
+    */
+   function camel_case(string $string, bool $uppercase = false): string {
+      $result = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $string)));
+      return $uppercase ? ucfirst($result) : $result;
+   }
+}
+
+if (!function_exists('snake_case')) {
+   /**
+    * Convierte un string a formato snake_case.
+    */
+   function snake_case(string $string): string {
+      return strtolower(preg_replace('/[A-Z]/', '_$0', lcfirst($string)));
+   }
+}
+if (!function_exists('assets')) {
+   /**
+    * Genera una URL para un recurso estático.
+    */
+   function assets(string $path): string {
+      return config('app.assets_url', '') . '/' . ltrim($path, '/');
+   }
+}

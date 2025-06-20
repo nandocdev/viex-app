@@ -23,7 +23,7 @@ class HandlerResolver {
     * El namespace base para todos los controladores.
     * @var string
     */
-   protected string $controllerNamespace = 'Phast\\App\\';
+   protected string $controllerNamespace = 'Phast\\App\\Modules\\';
 
    /**
     * El contenedor de inyección de dependencias.
