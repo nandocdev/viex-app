@@ -84,6 +84,7 @@ if (!function_exists('assets')) {
     * Genera una URL para un recurso estático.
     */
    function assets(string $path): string {
-      return config('app.assets_url', '') . '/' . ltrim($path, '/');
+      $url = config('app.url', '') . '/assets/' . ltrim($path, '/');
+      return $url;
    }
 }
