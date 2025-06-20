@@ -26,7 +26,7 @@ class RouteNotFoundException extends \RuntimeException {
     * @param int $code Código de la excepción (no el código HTTP).
     * @param \Throwable|null $previous Excepción anterior para encadenamiento.
     */
-   public function __construct(string $message = 'Route not found.', int $code = 0, \Throwable $previous = null) {
+   public function __construct(string $message = 'Route not found.', int $code = 0, ?\Throwable $previous = null) {
       parent::__construct($message, $code, $previous);
    }
 

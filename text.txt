@@ -1,53 +1,106 @@
 .
 ├── app
-│   ├── Controllers
-│   │   └── HomeController.php
-│   └── Views
-│       ├── Dashboard
-│       │   └── index.view.phtml
-│       └── Welcome
-│           ├── home.view.phtml
-│           └── partials
-│               └── my_partial.partial.phtml
+│   ├── Contracts
+│   ├── Middlewares
+│   ├── Modules
+│   │   └── Users
+│   │       ├── Controllers
+│   │       │   └── UserController.php
+│   │       ├── Models
+│   │       │   ├── Entities
+│   │       │   ├── Repositories
+│   │       │   └── ValueObjects
+│   │       └── Services
+│   ├── Providers
+│   │   ├── AppServiceProvider.php
+│   │   └── SystemServiceProvider.php
+│   └── Services
 ├── composer.json
 ├── composer.lock
 ├── config
 │   ├── app.php
-│   └── database.php
+│   ├── database.php
+│   ├── filesystems.php
+│   ├── security.php
+│   ├── services.php
+│   └── session.php
 ├── doc
 │   ├── analisis
 │   │   └── Resumen.md
-│   ├── PjastDoc.md
+│   ├── ORM.md
+│   ├── PhastDoc.md
 │   ├── ROUTING.md
 │   └── Views.md
 ├── LICENSE
+├── phast
 ├── public
 │   └── index.php
 ├── README.md
 ├── resources
+│   ├── templates
+│   │   ├── errors
+│   │   │   └── 500.view.phtml
+│   │   ├── layouts
+│   │   │   ├── auth
+│   │   │   │   └── index.layout.phtml
+│   │   │   └── default
+│   │   │       └── index.layout.phtml
+│   │   └── partials
+│   │       ├── global_header.partial.phtml
+│   │       └── sidebar.partial.phtml
 │   └── views
-│       ├── layouts
-│       │   ├── auth
-│       │   │   └── index.layout.phtml
-│       │   └── default
-│       │       └── index.layout.phtml
-│       └── partials
-│           ├── global_header.partial.phtml
-│           └── sidebar.partial.phtml
+│       └── user
+│           └── index.view.phtml
 ├── routes
 │   └── web.php
 ├── system
+│   ├── Console
+│   │   ├── Commands
+│   │   │   ├── MakeControllerCommand.php
+│   │   │   └── MakeModelCommand.php
+│   │   └── stubs
+│   │       ├── controller.stub
+│   │       └── model.stub
 │   ├── Core
 │   │   ├── Application.php
-│   │   └── Container.php
+│   │   ├── Config.php
+│   │   ├── Container.php
+│   │   └── Contracts
+│   │       └── ServiceProviderInterface.php
 │   ├── Database
 │   │   ├── Connection.php
-│   │   ├── DatabaseManager.php
-│   │   └── Database.php
+│   │   ├── DB.php
+│   │   └── Executor
+│   │       ├── Contracts
+│   │       │   └── SqlOperation.php
+│   │       ├── Operations
+│   │       │   ├── DeleteOperation.php
+│   │       │   ├── InsertOperation.php
+│   │       │   ├── SelectOperation.php
+│   │       │   └── UpdateOperation.php
+│   │       └── QueryExecutor.php
+│   ├── helpers.php
 │   ├── Http
-│   │   ├── Request_cp.php
+│   │   ├── Exceptions
+│   │   │   └── TokenMismatchException.php
+│   │   ├── Middleware
+│   │   │   └── VerifyCsrfToken.php
 │   │   ├── Request.php
 │   │   └── Response.php
+│   ├── Plugins
+│   │   ├── Session
+│   │   │   └── SessionManager.php
+│   │   └── Validation
+│   │       ├── ValidationException.php
+│   │       └── Validator.php
+│   ├── Providers
+│   │   ├── ConfigServiceProvider.php
+│   │   ├── DatabaseServiceProvider.php
+│   │   ├── LogServiceProvider.php
+│   │   ├── RoutingServiceProvider.php
+│   │   ├── SessionServiceProvider.php
+│   │   ├── SystemServiceProvider.php
+│   │   └── ViewServiceProvider.php
 │   ├── Rendering
 │   │   ├── Contracts
 │   │   │   └── ViewEngine.php
@@ -83,5 +136,3 @@
 │       ├── TemplateLoader.php
 │       └── View.php
 └── text.txt
-
-36 directories, 49 files

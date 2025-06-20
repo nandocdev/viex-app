@@ -40,8 +40,8 @@ class Application {
       $this->loadEnvironment();
       $this->registerServices();
       $this->loadRoutes();
-      $this->loadAppConfig();
-      $this->loadDatabaseConfig();
+      // $this->loadAppConfig();
+      // $this->loadDatabaseConfig();
 
    }
 
@@ -64,7 +64,7 @@ class Application {
       $this->container->singleton(Response::class, fn() => new Response());
 
       // Cargar y registrar todos los proveedores de servicios
-      $providers = require $this->basePath . '/config/providers.php';
+      $providers = require $this->basePath . '/app/Providers/SystemServiceProvider.php';
 
       foreach ($providers as $providerClass) {
          if (!class_exists($providerClass)) {
@@ -84,15 +84,15 @@ class Application {
    }
 
 
-   protected function loadAppConfig(): void {
-      $appConfig = require $this->basePath . "/config/app.php";
-      $this->container->singleton('config', fn() => $appConfig);
-   }
+   // protected function loadAppConfig(): void {
+   //    $appConfig = require $this->basePath . "/config/app.php";
+   //    $this->container->singleton('config', fn() => $appConfig);
+   // }
 
-   protected function loadDatabaseConfig(): void {
-      $dbConfig = require $this->basePath . "/config/database.php";
-      $this->container->singleton('database', fn() => $dbConfig);
-   }
+   // protected function loadDatabaseConfig(): void {
+   //    $dbConfig = require $this->basePath . "/config/database.php";
+   //    $this->container->singleton('database', fn() => $dbConfig);
+   // }
 
 
    protected function loadRoutes(): void {

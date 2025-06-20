@@ -72,7 +72,21 @@ class PhpEngine implements ViewEngine {
       // Incluir el contenido como si fuera un archivo para ejecutar PHP incrustado
       // Esto es un poco más peligroso que `include $templatePath` si el $content no es de confianza
       // pero es necesario para la inyección de la vista en el layout.
-      eval ('?>' . $content); // Se mantiene eval aquí para la flexibilidad con @content, pero se debe usar con precaución.
+      /** 
+       * eval ('?>' . $content); 
+       * // Se mantiene eval aquí para la flexibilidad con @content, pero se debe usar con precaución.
+       * $output = ob_get_clean();
+       */
+
+      $tmpFile = tempnam(sys_get_temp_dir(), 'phast_view_');
+      file_put_contents($tmpFile, $content);
+
+      try {
+         include $tmpFile; // Incluir el contenido como si fuera un archivo PHP normal
+      } finally {
+         unlink($tmpFile); // Asegurarse de eliminar el archivo temporal
+      }
+
       $output = ob_get_clean();
 
       // Procesar directivas después de la inclusión (ej. parciales)

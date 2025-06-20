@@ -1,12 +1,16 @@
 <?php
 /**
- * @package     http/phast
- * @subpackage  config
- * @file        providers
- * @description Registra todos los proveedores de servicios para la aplicación.
+ * @package     phast/app
+ * @subpackage  Providers
+ * @file        SystemServiceProvider
+ * @author      Fernando Castillo <nando.castillo@outlook.com>
+ * @date        2025-06-19 10:02:24
+ * @version     1.0.0
+ * @description
  */
 
 declare(strict_types=1);
+
 
 return [
    /*

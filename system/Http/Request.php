@@ -39,12 +39,18 @@ class Request {
    protected array $headers;
    protected array $params = []; // Para almacenar parámetros de ruta, populado por el router
 
-   public function __construct() {
-      $this->server = $_SERVER;
-      $this->cookies = $_COOKIE;
+   public function __construct(
+      array $server = [],
+      array $get = [],
+      array $post = [],
+      array $cookies = [],
+      array $files = []
+   ) {
+      $this->server = $server;
+      $this->cookies = $cookies;
       // Solo asignamos si $_SESSION está disponible y es un array, o un array vacío
       $this->session = isset($_SESSION) && is_array($_SESSION) ? $_SESSION : [];
-      $this->files = $_FILES;
+      $this->files = $files;
 
       $this->method = $this->determineMethod();
       $this->headers = $this->getHeaders(); // Necesario antes de contentType, userAgent, etc.
@@ -63,7 +69,21 @@ class Request {
       $this->accept = $this->getServerVar('HTTP_ACCEPT', '');
       $this->proxyIp = $this->setProxyIp();
 
-      $this->body = $this->parseBody();
+      $this->body = $this->parseBody($get, $post); // Combina GET y POST, y maneja JSON si es necesario
+   }
+
+   public static function createFromGlobals(): self {
+      // Toda la lógica que actualmente está en el constructor
+      // para leer $_SERVER, $_GET, $_POST, $_FILES, $_COOKIE, etc.
+      // debe moverse AQUÍ.
+
+      $server = $_SERVER;
+      $cookies = $_COOKIE;
+      // ... y así sucesivamente para todas las superglobales
+
+      // Este método finalmente llamará al constructor con los datos extraídos.
+      // Por ejemplo:
+      return new self($server, $_GET, $_POST, $cookies, $_FILES);
    }
 
    /**
@@ -73,6 +93,8 @@ class Request {
    public function getMethod(): string {
       return $this->method;
    }
+
+
 
    /**
     * Obtiene la ruta de la URI sin el query string.
@@ -261,7 +283,10 @@ class Request {
     * @return void
     */
    public function setRouteParams(array $params): void {
-      $this->params = $params;
+      // --- ¡ESTE ES EL CAMBIO CLAVE! ---
+      // Fusionamos los parámetros de la ruta con el cuerpo de la petición.
+      // Los parámetros de la ruta tendrán prioridad si hay un conflicto de nombres.
+      $this->body = array_merge($this->body, $params);
    }
 
    /**
@@ -282,6 +307,7 @@ class Request {
       return $this->params[$key] ?? $default;
    }
 
+
    /* --- Métodos internos de determinación --- */
 
    /**
@@ -289,11 +315,11 @@ class Request {
     * Prioriza JSON si es aplicable.
     * @return array
     */
-   protected function parseBody(): array {
+   protected function parseBody(array $get = [], array $post = []): array {
       // Simplemente combina los datos crudos. Sin sanitización aquí.
-      $body = $_GET;
+      $body = $get;
       if ($this->method === 'POST') {
-         $body = array_merge($body, $_POST);
+         $body = array_merge($body, $post);
       }
 
 

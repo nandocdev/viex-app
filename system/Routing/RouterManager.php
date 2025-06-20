@@ -83,12 +83,19 @@ class RouterManager {
 
       $matched = $this->matcher->match($request, $this->collector);
 
+      // print_r($matched);
       if (is_null($matched)) {
-         throw new RouteNotFoundException("No route found for {$request->getMethod()} {$request->getPath()}");
+         throw new RouteNotFoundException("No route found for {$request->getMethod()} {$request->getPath()} with match parameters: " . json_encode($matched));
       }
 
       $route = $matched['route'];
       $params = $matched['params'];
+
+
+      // --- LÍNEA CLAVE A AÑADIR ---
+      // Le pasamos los parámetros de la ruta al objeto Request.
+      $request->setRouteParams($params);
+      // ----------------------------
 
       // Prepara la acción del controlador
       $handler = $this->resolver->resolve($route['action']);

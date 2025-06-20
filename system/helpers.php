@@ -25,3 +25,22 @@ if (!function_exists('csrf_field')) {
       return '<input type="hidden" name="_token" value="' . csrf_token() . '">';
    }
 }
+
+
+// En un archivo de helpers que cargues en tu bootstrap o composer.json
+if (!function_exists('config')) {
+   function config(string $key, $default = null) {
+      return Phast\System\Core\Container::getInstance()
+         ->resolve(Phast\System\Core\Config::class)
+         ->get($key, $default);
+   }
+}
+
+// debug helper
+if (!function_exists('debug')) {
+   function debug(...$data): void {
+      echo '<pre>';
+      var_dump(...$data);
+      echo '</pre>';
+   }
+}

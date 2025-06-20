@@ -33,7 +33,7 @@ class InvalidRouteException extends \LogicException {
     * @param int $code Código de la excepción.
     * @param \Throwable|null $previous Excepción anterior para encadenamiento.
     */
-   public function __construct(string $message = 'Invalid route configuration.', int $code = 0, \Throwable $previous = null) {
+   public function __construct(string $message = 'Invalid route configuration.', int $code = 0, ?\Throwable $previous = null) {
       parent::__construct($message, $code, $previous);
    }
 

@@ -130,8 +130,9 @@ class RouteCollector {
     * @return self
     */
    protected function addRoute(array $methods, string $uri, mixed $action): self {
-      $prefix = $this->getCurrentPrefix();
-      $uri = $this->normalizeUri($prefix . '/' . $uri);
+      $prefix = $this->getCurrentPrefix(); // sin formatUri aún
+      $uri = $this->joinUri($prefix, $uri); // une limpiamente
+      $uri = $this->normalizeUri($uri);     // si quieres dejarlo
 
       $this->routes[] = [
          'methods' => $methods,
@@ -144,14 +145,22 @@ class RouteCollector {
       return $this;
    }
 
+   private function joinUri(string $prefix, string $uri): string {
+      return '/' . trim(rtrim($prefix, '/') . '/' . ltrim($uri, '/'), '/');
+   }
+
+
+
+
    /**
     * Normaliza una URI eliminando barras duplicadas y la barra final (excepto para '/').
     */
    private function normalizeUri(string $uri): string {
-      $uri = '/' . ltrim(trim($uri), '/');
+      // Reemplaza múltiples slashes internos
+      $uri = preg_replace('#/+#', '/', $uri);
+      $uri = '/' . trim($uri, '/');
       return $uri === '/' ? $uri : rtrim($uri, '/');
    }
-
    /**
     * Obtiene el prefijo acumulado de todos los grupos en la pila.
     */

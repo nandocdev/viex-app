@@ -26,9 +26,9 @@ class TemplateLoader {
 
    public function __construct(private readonly string $basePath) {
 
-      $this->layoutsBasePath = rtrim($basePath . '/resources/views/layouts', self::DS) . self::DS;
-      $this->viewsBasePath = rtrim($basePath . '/app/Views', self::DS) . self::DS;
-      $this->partialsBasePath = rtrim($basePath . '/resources/views/partials', self::DS) . self::DS;
+      $this->layoutsBasePath = rtrim($basePath . '/resources/templates/layouts', self::DS) . self::DS;
+      $this->viewsBasePath = rtrim($basePath . '/resources/views', self::DS) . self::DS;
+      $this->partialsBasePath = rtrim($basePath . '/resources/templates/partials', self::DS) . self::DS;
 
       if (!is_dir($this->layoutsBasePath)) {
          throw new InvalidArgumentException("La ruta base de layouts no es un directorio válido: {$this->layoutsBasePath}");

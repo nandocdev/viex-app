@@ -41,7 +41,7 @@ class SystemServiceProvider implements ServiceProviderInterface {
       $container->singleton(Request::class, function () {
          // Asumiendo que has refactorizado Request como discutimos
          // para que no dependa directamente de superglobales en su constructor.
-         return new Request();
+         return Request::createFromGlobals();
       });
 
       // 2. Registrar el objeto Response como un singleton.

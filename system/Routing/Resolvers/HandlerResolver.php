@@ -23,7 +23,7 @@ class HandlerResolver {
     * El namespace base para todos los controladores.
     * @var string
     */
-   protected string $controllerNamespace = 'Phast\\App\\Controllers\\';
+   protected string $controllerNamespace = 'Phast\\App\\';
 
    /**
     * El contenedor de inyección de dependencias.
@@ -59,7 +59,7 @@ class HandlerResolver {
       }
 
       // Si no es ninguno de los anteriores, es un formato inválido.
-      throw new InvalidRouteException('Invalid route handler. Must be a Closure or a "Controller@method" string.');
+      throw new InvalidRouteException('Invalid route handler. Must be a Closure or a "Controller@method" string. ' . json_encode($handler));
    }
 
    /**
@@ -73,7 +73,7 @@ class HandlerResolver {
       // 1. Separar la clase del método.
       [$class, $method] = explode('@', $handlerString, 2);
 
-      // 2. Construir el nombre de la clase completamente cualificado.
+      // 2. El FQCN (Fully Qualified Class Name) vendrá casi completo desde la ruta.
       $className = $this->controllerNamespace . $class;
 
       // 3. Verificar que la clase del controlador exista.
