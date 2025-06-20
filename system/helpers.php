@@ -7,6 +7,8 @@
 
 use Phast\System\Core\Container;
 use Phast\System\Plugins\Session\SessionManager;
+use Phast\System\Rendering\Components\AvatarComponent as Avatar;
+use Phast\System\Rendering\Components\AcctionButtonsComponent as AcctionButtons;
 
 if (!function_exists('csrf_token')) {
    /**
@@ -42,5 +44,18 @@ if (!function_exists('debug')) {
       echo '<pre>';
       var_dump(...$data);
       echo '</pre>';
+   }
+}
+
+if (!function_exists('avatar')) {
+   function avatar(string $name, string $surname): Avatar {
+      return new Avatar($name, $surname);
+   }
+}
+
+if (!function_exists('action_buttons')) {
+   function action_buttons(array $buttons = [], array $params = []): string {
+      // El método estático se adapta bien aquí
+      return AcctionButtons::init($buttons, $params);
    }
 }

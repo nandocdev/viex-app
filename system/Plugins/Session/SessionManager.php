@@ -16,6 +16,9 @@ namespace Phast\System\Plugins\Session;
 class SessionManager {
    private static bool $sessionStarted = false;
    protected const TOKEN_KEY = '_token';
+   private const FLASH_KEY = '_flash';
+   private const FLASH_NEW = '_flash_new';
+   private const FLASH_OLD = '_flash_old';
    /**
     * Inicia o reanuda la sesión PHP con configuraciones seguras.
     * Los parámetros de la cookie de sesión se obtienen de las variables de entorno.
@@ -55,7 +58,33 @@ class SessionManager {
          session_start();
       }
 
+      $this->ageFlashData(); // Llama a este método después de session_start()
       self::$sessionStarted = true;
+   }
+
+   /**
+    * Guarda un dato en la sesión solo para la siguiente petición.
+    */
+   public function flash(string $key, mixed $value): void {
+      $_SESSION[self::FLASH_NEW][$key] = $value;
+   }
+
+   /**
+    * Obtiene un dato "flashed" de la petición anterior.
+    */
+   public function getFlashed(string $key, mixed $default = null): mixed {
+      return $_SESSION[self::FLASH_OLD][$key] ?? $default;
+   }
+
+   protected function ageFlashData(): void {
+      // Borra los datos que ya tienen una petición de antigüedad
+      unset($_SESSION[self::FLASH_OLD]);
+
+      // Mueve los nuevos datos al bucket de "viejos" para que se puedan leer
+      if (isset($_SESSION[self::FLASH_NEW])) {
+         $_SESSION[self::FLASH_OLD] = $_SESSION[self::FLASH_NEW];
+         unset($_SESSION[self::FLASH_NEW]);
+      }
    }
 
    /**
