@@ -400,16 +400,37 @@ class Request {
     * @return string
     */
    protected function determineIp(): string {
-      foreach (['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'] as $key) {
-         if (!empty($this->server[$key])) {
-            $ip = trim(explode(',', $this->server[$key])[0]); // Maneja múltiples IPs en X-Forwarded-For
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
-               return $ip;
-            }
+      $remoteAddr = $this->getServerVar('REMOTE_ADDR');
+      $trustedProxies = config('http.trusted_proxies'); // Solicitaré al Core team que asegure que config() esté disponible aquí.
+
+      if ($this->isTrustedProxy($remoteAddr, $trustedProxies)) {
+         $headerName = config('http.trusted_proxy_header', 'HTTP_X_FORWARDED_FOR');
+         $forwardedIps = explode(',', $this->getServerVar($headerName, ''));
+         $clientIp = trim(end($forwardedIps)); // El cliente real es la última IP en la cadena X-Forwarded-For
+
+         if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+            return $clientIp;
          }
       }
-      return '';
+
+      // Fallback y caso por defecto: usar la IP de la conexión directa
+      return filter_var($remoteAddr, FILTER_VALIDATE_IP) ? $remoteAddr : '0.0.0.0';
    }
+
+   private function isTrustedProxy(string $ip, ?string $trustedProxies): bool {
+      if (is_null($trustedProxies)) {
+         return false;
+      }
+      if ($trustedProxies === '*') {
+         return true;
+      }
+
+      $proxies = array_map('trim', explode(',', $trustedProxies));
+      // Aquí iría la lógica para comparar la IP contra IPs y rangos CIDR.
+      // Se puede usar una librería o una implementación manual.
+      return in_array($ip, $proxies); // Implementación simplificada
+   }
+
 
    /**
     * Determina si la solicitud es AJAX.

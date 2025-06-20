@@ -37,7 +37,7 @@ class Container {
    public function singleton(string $key, Closure $resolver): void {
       $this->bindings[$key] = function () use ($resolver) {
          static $resolvedInstance = null;
-         if (is_null($resolvedInstance)) {
+         if (isset($resolvedInstance)) {
             $resolvedInstance = $resolver($this);
          }
          return $resolvedInstance;

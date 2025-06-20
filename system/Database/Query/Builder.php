@@ -191,6 +191,7 @@ class Builder {
    // --- MÉTODOS TERMINALES (MODIFICADORES) ---
 
    public function insert(array $data): bool {
+      // VULNERABILIDAD: array_keys($data) se concatena directamente.
       $columns = implode(', ', array_keys($data));
       $placeholders = implode(', ', array_fill(0, count($data), '?'));
       $sql = "INSERT INTO {$this->from} ({$columns}) VALUES ({$placeholders})";
@@ -209,6 +210,7 @@ class Builder {
    public function update(array $data): int {
       $setClauses = [];
       foreach (array_keys($data) as $column) {
+         // VULNERABILIDAD: $column se concatena directamente.
          $setClauses[] = "{$column} = ?";
       }
       $setClause = implode(', ', $setClauses);

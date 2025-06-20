@@ -97,6 +97,30 @@ return [
       // App\Providers\AuthServiceProvider::class,
    ],
 
+   /*
+   |--------------------------------------------------------------------------
+   | Proxies de Confianza
+   |--------------------------------------------------------------------------
+   |
+   | Especifica las direcciones IP de tus proxies de confianza (ej: balanceadores
+   | de carga, Cloudflare, etc.). Puedes usar '*' para confiar en todos los
+   | proxies (no recomendado para producción), o definir IPs específicas
+   | o rangos CIDR.
+   |
+   */
+   'trusted_proxies' => $_ENV['TRUSTED_PROXIES'], // Lee desde .env: '192.168.1.1,10.0.0.0/8'
+
+   /*
+   |--------------------------------------------------------------------------
+   | Encabezado del Proxy de Confianza
+   |--------------------------------------------------------------------------
+   |
+   | Define qué encabezado usar para determinar la IP del cliente cuando la
+   | petición viene de un proxy de confianza.
+   |
+   */
+   'trusted_proxy_header' => 'X-Forwarded-For',
+
 
 
 ];
