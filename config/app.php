@@ -108,7 +108,7 @@ return [
    | o rangos CIDR.
    |
    */
-   'trusted_proxies' => $_ENV['TRUSTED_PROXIES'], // Lee desde .env: '192.168.1.1,10.0.0.0/8'
+   'trusted_proxies' => $_ENV['TRUSTED_PROXIES'] ?? null, // Lee desde .env: '192.168.1.1,10.0.0.0/8'
 
    /*
    |--------------------------------------------------------------------------
@@ -120,7 +120,5 @@ return [
    |
    */
    'trusted_proxy_header' => 'X-Forwarded-For',
-
-
 
 ];

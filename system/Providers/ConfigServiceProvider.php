@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Phast\System\Providers;
 
-use Phast\System\Core\Application;
 use Phast\System\Core\Container;
 use Phast\System\Core\Contracts\ServiceProviderInterface;
 use Phast\System\Core\Config;
@@ -17,8 +16,8 @@ use RuntimeException;
 
 class ConfigServiceProvider implements ServiceProviderInterface {
    public function register(Container $container): void {
-
-      $app = $container->resolve(Application::class);
+      // Get the base path from the Application instance that's already registered
+      $app = $container->resolve(\Phast\System\Core\Application::class);
       $configPath = $app->basePath . '/config';
 
       if (!is_dir($configPath)) {
@@ -28,6 +27,6 @@ class ConfigServiceProvider implements ServiceProviderInterface {
       // Registra todo el array de configuración como un singleton en el contenedor.
       // Usamos 'bind' en lugar de 'singleton' porque un array no es una clase,
       // pero el efecto es el mismo: se registra un valor único.
-      $container->bind('config', fn() => new Config($container->resolve(Application::class)));
+      $container->bind('config', fn() => new Config($app));
    }
 }
