@@ -72,6 +72,14 @@ class Request {
       $this->body = $this->parseBody($get, $post); // Combina GET y POST, y maneja JSON si es necesario
    }
 
+
+   public function getServer(string $key, string $default = '') {
+      if (is_null($key)) {
+         return $this->server;
+      }
+      return $this->server[$key] ?? $default;
+   }
+
    public static function createFromGlobals(): self {
       // Toda la lógica que actualmente está en el constructor
       // para leer $_SERVER, $_GET, $_POST, $_FILES, $_COOKIE, etc.

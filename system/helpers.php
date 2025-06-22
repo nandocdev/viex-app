@@ -6,6 +6,7 @@
  */
 
 use Phast\System\Core\Container;
+use Phast\System\Http\Request;
 use Phast\System\Plugins\Session\SessionManager;
 use Phast\System\Rendering\Components\AvatarComponent as Avatar;
 use Phast\System\Rendering\Components\AcctionButtonsComponent as AcctionButtons;
@@ -84,7 +85,44 @@ if (!function_exists('assets')) {
     * Genera una URL para un recurso estático.
     */
    function assets(string $path): string {
-      $url = config('app.url', '') . '/assets/' . ltrim($path, '/');
+      // $url = SYS_PROTOCOL . $_SERVER['HTTP_HOST'];
+      // if (!empty($_GET['url'])) {
+      //    $query_string = '';
+      //    if (count($_GET) > 1) {
+      //       $query_string = '?';
+      //       foreach ($_GET as $key => $value) {
+      //          if ($key != 'url') {
+      //             $query_string .= $key . '=' . $value . '&';
+      //          }
+      //       }
+      //       $query_string = rtrim($query_string, '&');
+      //    }
+      //    $url .= str_replace($_GET['url'] . $query_string, '', urldecode($_SERVER['REQUEST_URI']));
+      // } else {
+      //    $url .= $_SERVER['REQUEST_URI'];
+      // }
+
+      // obtiene getScheme() y HTTP_HOST de la solicitud actual desde el servidor
+      $request = Container::getInstance()->resolve(Request::class);
+      $url = $request->getScheme() . '://' . $request->getHost();
+      if (!empty($request->getBody()['url'])) {
+         $query_string = '';
+         if (count($request->getBody()) > 1) {
+            $query_string = '?';
+            foreach ($request->getBody() as $key => $value) {
+               if ($key != 'url') {
+                  $query_string .= $key . '=' . $value . '&';
+               }
+            }
+            $query_string = rtrim($query_string, '&');
+         }
+         $url = $request->getScheme() . '://' . $request->getHost() .
+            str_replace($request->getBody()['url'] . $query_string, '', urldecode($request->getServer('REQUEST_URI')));
+      } else {
+         $url = $request->getScheme() . '://' . $request->getHost() . $request->getServer('REQUEST_URI');
+      }
+
+      $url = $url . '/assets/' . ltrim($path, '/');
       return $url;
    }
 }
