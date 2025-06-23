@@ -15,7 +15,7 @@ namespace Phast\System\Auth\Guards;
 use Phast\System\Auth\Contracts\Guard;
 use Phast\System\Auth\Authenticatable;
 use Phast\System\Plugins\Session\SessionManager;
-use Phast\App\Modules\Users\Models\User; // Asumimos que nuestro proveedor de usuarios es el modelo User
+use Phast\App\Modules\Auth\Models\Entities\UserEntity; // Asumimos que nuestro proveedor de usuarios es el modelo User
 
 class SessionGuard implements Guard {
 
@@ -29,7 +29,7 @@ class SessionGuard implements Guard {
       protected SessionManager $session,
       // En un futuro, podrías inyectar un "UserProvider" en lugar del modelo directamente
       // para mayor flexibilidad. Por ahora, esto es simple y efectivo.
-      protected string $userModelClass = User::class
+      protected string $userModelClass = UserEntity::class
    ) {
    }
 

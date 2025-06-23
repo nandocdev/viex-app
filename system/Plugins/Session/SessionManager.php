@@ -63,6 +63,19 @@ class SessionManager {
    }
 
    /**
+    * regenera la sesión actual, destruye la sesión anterior
+    */
+   public function regenerate(): void {
+      if (session_status() === PHP_SESSION_ACTIVE) {
+         // Regenera la sesión actual
+         session_regenerate_id(true); // true para eliminar la sesión anterior
+         $this->ageFlashData(); // Actualiza los datos "flashed" después de regenerar
+      } else {
+         $this->start(); // Asegúrate de que la sesión esté iniciada
+      }
+   }
+
+   /**
     * Guarda un dato en la sesión solo para la siguiente petición.
     */
    public function flash(string $key, mixed $value): void {

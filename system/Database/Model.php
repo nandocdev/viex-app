@@ -118,14 +118,16 @@ abstract class Model {
    // --- MÉTODOS ESTÁTICOS (PUNTO DE ENTRADA A CONSULTAS) ---
 
    public static function all(): array {
-      return static::newQuery()->get()->map(function ($item) {
+      $model = new static();
+      $results = $model->newQuery()->get();
+      return array_map(function ($item) {
          return (new static)->newFromBuilder($item);
-      })->all(); // Asumiendo que `get()` devolverá una Colección en el futuro.
-      // Por ahora, asumimos que devuelve un array.
+      }, $results);
    }
 
    public static function find(int|string $id): ?static {
-      $result = static::newQuery()->find($id);
+      $model = new static();
+      $result = $model->newQuery()->find($id);
       return $result ? (new static)->newFromBuilder($result) : null;
    }
 
@@ -148,7 +150,25 @@ abstract class Model {
    // --- MÉTODOS MÁGICOS ESTÁTICOS PARA EL BUILDER ---
 
    public static function __callStatic(string $method, array $parameters) {
-      return (new static)->newQuery()->$method(...$parameters);
+      $model = new static();
+      $result = $model->newQuery()->$method(...$parameters);
+      
+      // Si el resultado es un objeto stdClass (resultado de consulta), convertirlo a modelo
+      if (is_object($result) && get_class($result) === 'stdClass') {
+         return (new static)->newFromBuilder($result);
+      }
+      
+      // Si es un array de objetos stdClass, convertirlos a modelos
+      if (is_array($result)) {
+         return array_map(function ($item) {
+            if (is_object($item) && get_class($item) === 'stdClass') {
+               return (new static)->newFromBuilder($item);
+            }
+            return $item;
+         }, $result);
+      }
+      
+      return $result;
    }
 
    // --- MÉTODOS AUXILIARES ---

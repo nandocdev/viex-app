@@ -16,8 +16,7 @@ namespace Phast\System\Providers;
 use Phast\System\Core\Application;
 use Phast\System\Core\Container;
 use Phast\System\Core\Contracts\ServiceProviderInterface;
-use Phast\System\Database\Database;
-use Phast\System\Database\DatabaseManager;
+use Phast\System\Database\Connection;
 
 class DatabaseServiceProvider implements ServiceProviderInterface {
    /**
@@ -27,25 +26,15 @@ class DatabaseServiceProvider implements ServiceProviderInterface {
     * @return void
     */
    public function register(Container $container): void {
-      // 1. Registrar el DatabaseManager como un singleton.
-      // Este gestor es responsable de manejar las configuraciones de conexión
-      // y de crear instancias de conexión. Solo necesitamos uno por aplicación.
-      // Depende de `Application` para encontrar el archivo de configuración.
-      $container->singleton(DatabaseManager::class, function (Container $c) {
-         return new DatabaseManager(
-            $c->resolve(Application::class)
-         );
+      // Register the database configuration
+      $container->singleton('database', function (Container $c) {
+         return require $c->resolve(Application::class)->basePath . '/config/database.php';
       });
 
-      // 2. Registrar la clase Database principal como un singleton.
-      // Esta clase actúa como la fachada principal para ejecutar consultas (SELECT, INSERT, etc.).
-      // Al ser un singleton, se asegura de que reutiliza la misma conexión PDO
-      // obtenida del DatabaseManager a lo largo de todo el ciclo de la petición.
-      // Depende del DatabaseManager para obtener la conexión.
-      $container->singleton(Database::class, function (Container $c) {
-         return new Database(
-            $c->resolve(DatabaseManager::class)
-         );
+      // Register the Connection class as a singleton
+      // This class manages the PDO connection and is used by the DB facade
+      $container->singleton(Connection::class, function (Container $c) {
+         return new Connection();
       });
    }
 }

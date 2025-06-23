@@ -13,7 +13,6 @@ foreach ($pathRoute as $routeFile) {
       require_once $routeFile;
    }
 }
-
 Router::get('/', function (Request $request, Response $response) {
-   return $response->json(['message' => 'Welcome to the Phast Framework!']);
-});
+   return $response->view('home/index', []);
+})->name('home.index');

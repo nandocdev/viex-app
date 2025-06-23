@@ -12,14 +12,15 @@ declare(strict_types=1);
 
 namespace Phast\System\Routing\Generators;
 
+use Phast\System\Routing\Collectors\RouteCollector;
 use Phast\System\Routing\Exceptions\InvalidRouteException;
 
 class UrlGenerator {
    /**
-    * El array de rutas con nombre.
-    * @var array
+    * The route collector instance.
+    * @var RouteCollector
     */
-   protected array $namedRoutes;
+   protected RouteCollector $collector;
 
    /**
     * El host base para generar URLs absolutas (ej: http://localhost).
@@ -30,11 +31,11 @@ class UrlGenerator {
    /**
     * Constructor.
     *
-    * @param array $namedRoutes Un array de rutas con nombre, pasado por el RouterManager.
+    * @param RouteCollector $collector The route collector instance.
     * @param string $baseHost El host base de la aplicación.
     */
-   public function __construct(array &$namedRoutes, string $baseHost = '') {
-      $this->namedRoutes = &$namedRoutes; // Pasado por referencia para eficiencia
+   public function __construct(RouteCollector $collector, string $baseHost = '') {
+      $this->collector = $collector;
       $this->baseHost = rtrim($baseHost, '/');
    }
 
@@ -48,11 +49,13 @@ class UrlGenerator {
     * @throws InvalidRouteException Si la ruta no existe o faltan parámetros.
     */
    public function route(string $name, array $parameters = [], bool $absolute = false): string {
-      if (!isset($this->namedRoutes[$name])) {
+      $namedRoutes = $this->collector->getNamedRoutes();
+      
+      if (!isset($namedRoutes[$name])) {
          throw new InvalidRouteException("Route with name [{$name}] not defined.");
       }
 
-      $uri = $this->namedRoutes[$name]['uri'];
+      $uri = $namedRoutes[$name]['uri'];
 
       // Reemplaza los parámetros en la URI
       foreach ($parameters as $key => $value) {

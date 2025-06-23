@@ -48,11 +48,10 @@ return [
    |
    */
    'providers' => [
-      'users' => [
-         'driver' => 'eloquent', // O 'model'
-         // --- ¡ESTA ES LA LÍNEA MÁS IMPORTANTE! ---
-         // Apunta al FQCN (Fully Qualified Class Name) de tu modelo User.
-         'model' => Phast\App\Modules\Users\Models\User::class,
-      ],
+    'users' => [
+        'driver' => 'eloquent', // O 'model'
+        // --- ¡ESTA ES LA LÍNEA MODIFICADA! ---
+        'model' => Phast\App\Modules\Auth\Models\Entities\UserEntity::class, 
+    ]
    ],
 ];

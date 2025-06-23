@@ -9,10 +9,9 @@
  */
 declare(strict_types=1);
 
-namespace Phast\App\Modules\Auth\Models\Entities;
+namespace Phast\App\Modules\Home\Models\Entities;
 
 use Phast\System\Database\Model;
-use Phast\System\Auth\Authenticatable;
 // TODO: Importa las interfaces necesarias, como Authenticatable si es un modelo de usuario.
 // use Phast\System\Auth\Authenticatable; 
 // TODO: Importa los Value Objects que usarás en los 'casts'.
@@ -25,7 +24,7 @@ use Phast\System\Auth\Authenticatable;
  * @property-read \DateTime $created_at
  * @property-read \DateTime $updated_at
  */
-class AuthEntity extends Model {
+class HomeEntity extends Model {
     //--------------------------------------------------------------------------
     // SECCIÓN 1: CONFIGURACIÓN DEL ORM Y LA BASE DE DATOS
     //--------------------------------------------------------------------------

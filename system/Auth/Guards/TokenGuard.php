@@ -17,7 +17,7 @@ namespace Phast\System\Auth\Guards;
 use Phast\System\Auth\Contracts\Guard;
 use Phast\System\Auth\Authenticatable;
 use Phast\System\Http\Request;
-use Phast\App\Modules\Users\Models\User; // Asumimos User como proveedor
+use Phast\App\Modules\Auth\Models\Entities\UserEntity; // Asumimos User como proveedor
 
 class TokenGuard implements Guard {
 
@@ -35,7 +35,7 @@ class TokenGuard implements Guard {
 
    public function __construct(
       protected Request $request,
-      protected string $userModelClass = User::class
+      protected string $userModelClass = UserEntity::class
    ) {
    }
 

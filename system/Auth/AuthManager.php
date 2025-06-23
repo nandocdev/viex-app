@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     phast/system
  * @subpackage  Auth
@@ -8,6 +9,7 @@
  * @version     1.0.0
  * @description
  */
+
 declare(strict_types=1);
 
 namespace Phast\System\Auth;
@@ -20,7 +22,8 @@ use Phast\System\Plugins\Session\SessionManager;
 use Phast\System\Http\Request;
 use InvalidArgumentException;
 
-class AuthManager {
+class AuthManager
+{
    /** La instancia del contenedor de la aplicación. */
    protected Container $container;
 
@@ -33,17 +36,19 @@ class AuthManager {
     */
    protected array $guards = [];
 
-   public function __construct(Container $container) {
+   public function __construct(Container $container)
+   {
       $this->container = $container;
       // Asume que la configuración ya está cargada en el contenedor.
-      $this->config = $container->resolve('config')['auth'] ?? [];
+      $this->config = config('auth', []);
    }
 
    /**
     * Obtiene una instancia de un guard específico.
     * Si no se especifica un nombre, devuelve el guard por defecto.
     */
-   public function guard(?string $name = null): Guard {
+   public function guard(?string $name = null): Guard
+   {
       $name = $name ?: $this->getDefaultDriver();
 
       // Si ya hemos creado esta instancia de guard, la devolvemos.
@@ -59,7 +64,8 @@ class AuthManager {
     * Resuelve y crea la instancia del guard solicitado.
     * Este método actúa como la "fábrica" de guards.
     */
-   protected function resolve(string $name): Guard {
+   protected function resolve(string $name): Guard
+   {
       $config = $this->getConfig($name);
 
       if (is_null($config)) {
@@ -81,7 +87,8 @@ class AuthManager {
    /**
     * Crea una instancia del SessionGuard.
     */
-   protected function createSessionDriver(array $config): SessionGuard {
+   protected function createSessionDriver(array $config): SessionGuard
+   {
       $provider = $this->getUserProvider($config['provider']);
 
       // Resolvemos SessionManager desde el contenedor
@@ -93,7 +100,8 @@ class AuthManager {
    /**
     * Crea una instancia del TokenGuard.
     */
-   protected function createTokenDriver(array $config): TokenGuard {
+   protected function createTokenDriver(array $config): TokenGuard
+   {
       $provider = $this->getUserProvider($config['provider']);
 
       // Resolvemos Request desde el contenedor
@@ -105,28 +113,32 @@ class AuthManager {
    /**
     * Obtiene la configuración para un guard específico.
     */
-   protected function getConfig(string $name): ?array {
+   protected function getConfig(string $name): ?array
+   {
       return $this->config['guards'][$name] ?? null;
    }
 
    /**
     * Obtiene la configuración para un proveedor de usuarios.
     */
-   protected function getUserProvider(string $name): ?array {
+   protected function getUserProvider(string $name): ?array
+   {
       return $this->config['providers'][$name] ?? null;
    }
 
    /**
     * Obtiene el nombre del guard por defecto.
     */
-   public function getDefaultDriver(): string {
+   public function getDefaultDriver(): string
+   {
       return $this->config['defaults']['guard'];
    }
 
    /**
     * Establece el guard por defecto dinámicamente.
     */
-   public function setDefaultDriver(string $name): void {
+   public function setDefaultDriver(string $name): void
+   {
       $this->config['defaults']['guard'] = $name;
    }
 
@@ -136,7 +148,8 @@ class AuthManager {
     * Delega dinámicamente las llamadas al guard por defecto.
     * Esto nos permite hacer Auth::user(), Auth::check(), etc.
     */
-   public function __call(string $method, array $parameters) {
+   public function __call(string $method, array $parameters)
+   {
       return $this->guard()->$method(...$parameters);
    }
 }

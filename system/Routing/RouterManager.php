@@ -59,8 +59,9 @@ class RouterManager {
       // El generador de URL necesita acceso a las rutas con nombre y la URL base de la app.
       // Pasamos el array por referencia para que cualquier cambio se refleje.
       $baseHost = $_ENV['APP_URL'] ?? '';
-      $namedRoutes = $this->collector->getNamedRoutes();
-      $this->urlGenerator = new UrlGenerator($namedRoutes, $baseHost);
+      
+      // Pass the collector instance to the UrlGenerator
+      $this->urlGenerator = new UrlGenerator($this->collector, $baseHost);
    }
 
    /**
