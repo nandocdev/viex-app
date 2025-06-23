@@ -24,7 +24,7 @@ class MiddlewareDispatcher {
     * El namespace base para todos los middlewares.
     * @var string
     */
-   protected string $middlewareNamespace = 'App\\Middleware\\';
+   protected string $middlewareNamespace = 'Phast\\App\\Middleware\\';
 
    /**
     * El contenedor de inyección de dependencias.

@@ -9,4 +9,5 @@ use Phast\System\Routing\Facades\Router;
 
 Router::get('/about', 'Home\Controllers\HomeController@aboutAction')->name('home.about');
 Router::get('/contact', 'Home\Controllers\HomeController@contactAction')->name('home.contact');
-Router::get('/dashboard', 'Home\Controllers\HomeController@dashboardAction')->name('home.dashboard');
+Router::get('/projects/publics', 'Home\Controllers\HomeController@proyectosPublicosAction')->name('home.public_projects');
+Router::get('/dashboard', 'Home\Controllers\HomeController@dashboardAction')->name('home.dashboard')->middleware('Authenticate');

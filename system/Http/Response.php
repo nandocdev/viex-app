@@ -19,8 +19,7 @@ use Phast\System\Rendering\View;
 use Phast\System\Rendering\Render;
 use Phast\System\Plugins\Session\SessionManager;
 
-class Response
-{
+class Response {
    /**
     * @param string $body El cuerpo de la respuesta.
     * @param int $statusCode El código de estado HTTP.
@@ -30,22 +29,20 @@ class Response
       protected string $body = '',
       protected int $statusCode = 200,
       protected array $headers = ['Content-Type' => 'text/html; charset=utf-8']
-   ) {}
+   ) {
+   }
 
    // --- Getters para el Front Controller ---
 
-   public function getBody(): string
-   {
+   public function getBody(): string {
       return $this->body;
    }
 
-   public function getStatusCode(): int
-   {
+   public function getStatusCode(): int {
       return $this->statusCode;
    }
 
-   public function getHeaders(): array
-   {
+   public function getHeaders(): array {
       return $this->headers;
    }
 
@@ -55,8 +52,7 @@ class Response
     * Establece el código de estado.
     * Crea una nueva instancia para mantener la inmutabilidad.
     */
-   public function status(int $code): self
-   {
+   public function status(int $code): self {
       $new = clone $this;
       $new->statusCode = $code;
       return $new;
@@ -70,21 +66,23 @@ class Response
    //    return $new->header('Content-Type', 'text/html; charset=utf-8');
    // }
 
-   public function withError(string $message): self
-   {
+   public function withError(string $message): self {
       Container::getInstance()->resolve(SessionManager::class)->flash('error', $message);
       return $this;
    }
 
 
-
+   // Ejemplo para añadir a Response.php
+   public function withSuccess(string $message): self {
+      Container::getInstance()->resolve(SessionManager::class)->flash('success', $message);
+      return $this;
+   }
 
 
    /**
     * Añade o sobreescribe una cabecera.
     */
-   public function header(string $name, string $value): self
-   {
+   public function header(string $name, string $value): self {
       $new = clone $this;
       // Normaliza el nombre de la cabecera para evitar duplicados por mayúsculas/minúsculas
       $new->headers[ucwords(strtolower($name), '-')] = $value;
@@ -94,8 +92,7 @@ class Response
    /**
     * Prepara una respuesta JSON.
     */
-   public function json(array|object $data, int $statusCode = 200): self
-   {
+   public function json(array|object $data, int $statusCode = 200): self {
       try {
          $body = json_encode($data, JSON_THROW_ON_ERROR);
       } catch (\JsonException $e) {
@@ -115,8 +112,7 @@ class Response
     * Prepara una respuesta de vista renderizada.
     * ¡Delega la renderización al servicio de Vistas del contenedor!
     */
-   public function view(string $viewName, array $data = [], string $layoutName = 'default'): self
-   {
+   public function view(string $viewName, array $data = [], string $layoutName = 'default'): self {
       // 1. Obtener el servicio de renderizado del contenedor.
       $renderer = Container::getInstance()->resolve(Render::class);
 
@@ -136,8 +132,7 @@ class Response
    /**
     * Prepara una respuesta de redirección.
     */
-   public function redirect(string $url, int $statusCode = 302): self
-   {
+   public function redirect(string $url, int $statusCode = 302): self {
       // Valida que el código de estado sea uno de redirección.
       if ($statusCode < 300 || $statusCode > 308) {
          $statusCode = 302;
@@ -187,8 +182,7 @@ class Response
     * Método helper para añadir cabeceras sin sobreescribir las existentes del mismo nombre.
     * Útil para Set-Cookie.
     */
-   public function addHeader(string $name, string $value): self
-   {
+   public function addHeader(string $name, string $value): self {
       $new = clone $this;
       $name = ucwords(strtolower($name), '-');
 
@@ -209,8 +203,7 @@ class Response
     * Establece el cuerpo de la respuesta.
     * No debería ser público para fomentar el uso de métodos como json() o view().
     */
-   protected function setBody(string $body): self
-   {
+   protected function setBody(string $body): self {
       $new = clone $this;
       $new->body = $body;
       return $new;

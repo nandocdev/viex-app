@@ -1,0 +1,258 @@
+<div class="content-header">
+   <div class="container-fluid">
+      <div class="row mb-2">
+         <div class="col-sm-6">
+            <h1 class="m-0">Mi Perfil de Usuario</h1>
+         </div>
+      </div>
+   </div>
+</div>
+
+<section class="content">
+   <div class="container-fluid">
+      <div class="row">
+         <div class="col-md-3">
+
+            <!-- Tarjeta de Perfil -->
+            <div class="card card-primary card-outline">
+               <div class="card-body box-profile">
+                  <div class="text-center">
+                     <?php
+                     // Usamos nuestro helper para generar un avatar con las iniciales
+                     $avatar = avatar($user->first_name, $user->last_name);
+                     // $avatar->setSize(100);
+                     $avatar->setBackgroundColor('#007bff');
+                     $avatar->setForegroundColor('#ffffff');
+                     echo $avatar->generate();
+                     ?>
+                  </div>
+
+                  <h3 class="profile-username text-center">
+                     <?= htmlspecialchars($user->first_name . ' ' . $user->last_name, ENT_QUOTES, 'UTF-8') ?>
+                  </h3>
+
+                  <p class="text-muted text-center">
+                     <?php
+                     // Aquí podríamos mostrar el rol principal del usuario.
+                     // Esto requeriría cargar la relación de grupos, por ahora ponemos un placeholder.
+                     echo "Profesor";
+                     ?>
+                  </p>
+
+                  <ul class="list-group list-group-unbordered mb-3">
+                     <li class="list-group-item">
+                        <b>Trabajos Enviados</b> <a class="float-right">15</a> <!-- Placeholder -->
+                     </li>
+                     <li class="list-group-item">
+                        <b>Aprobados</b> <a class="float-right">10</a> <!-- Placeholder -->
+                     </li>
+                     <li class="list-group-item">
+                        <b>En Subsanación</b> <a class="float-right">2</a> <!-- Placeholder -->
+                     </li>
+                  </ul>
+               </div>
+            </div>
+
+            <!-- Tarjeta "Acerca de Mí" Adaptada -->
+            <div class="card card-primary">
+               <div class="card-header">
+                  <h3 class="card-title">Información Institucional</h3>
+               </div>
+               <div class="card-body">
+                  <strong><i class="fas fa-university mr-1"></i> Unidad Organizacional</strong>
+                  <p class="text-muted">
+                     <?php
+                     // Aquí mostraríamos la unidad del usuario (Facultad, Centro, etc.)
+                     // Requeriría cargar la relación, por ahora es un placeholder.
+                     echo "Facultad de Ingeniería de Sistemas Computacionales";
+                     ?>
+                  </p>
+                  <hr>
+                  <strong><i class="fas fa-envelope mr-1"></i> Correo Electrónico</strong>
+                  <p class="text-muted"><?= htmlspecialchars($user->email, ENT_QUOTES, 'UTF-8') ?></p>
+                  <hr>
+                  <strong><i class="fas fa-phone mr-1"></i> Contacto</i></strong>
+                  <p class="text-muted">
+                     Oficina: <?= htmlspecialchars($user->office_phone ?? 'No especificado', ENT_QUOTES, 'UTF-8') ?><br>
+                     Personal: <?= htmlspecialchars($user->personal_phone ?? 'No especificado', ENT_QUOTES, 'UTF-8') ?>
+                  </p>
+               </div>
+            </div>
+
+         </div>
+
+         <!-- Columna Derecha con Pestañas -->
+         <div class="col-md-9">
+            <div class="card">
+               <div class="card-header p-2">
+                  <ul class="nav nav-pills">
+                     <li class="nav-item"><a class="nav-link active" href="#my-works" data-toggle="tab">Mis Trabajos</a>
+                     </li>
+                     <li class="nav-item"><a class="nav-link" href="#settings" data-toggle="tab">Configuración</a></li>
+                  </ul>
+               </div>
+               <div class="card-body">
+                  <div class="tab-content">
+
+                     <!-- Pestaña "Mis Trabajos" -->
+                     <div class="active tab-pane" id="my-works">
+                        <p>A continuación se muestra una lista de sus trabajos de extensión registrados en la
+                           plataforma.</p>
+                        <!-- Aquí iría una tabla con los trabajos del usuario -->
+                        <table class="table table-striped">
+                           <thead>
+                              <tr>
+                                 <th>Título del Trabajo</th>
+                                 <th>Tipo</th>
+                                 <th>Fecha de Envío</th>
+                                 <th>Estado</th>
+                                 <th>Acciones</th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              <!-- Ejemplo de fila (estos datos serían dinámicos en el futuro) -->
+                              <tr>
+                                 <td>Proyecto de Reforestación en Cerro Patacón</td>
+                                 <td>Proyecto de Extensión</td>
+                                 <td>2024-05-10</td>
+                                 <td><span class="badge badge-success">Aprobado</span></td>
+                                 <td><a href="#" class="btn btn-sm btn-primary">Ver</a></td>
+                              </tr>
+                              <tr>
+                                 <td>Seminario de IA para Docentes</td>
+                                 <td>Actividad de Extensión</td>
+                                 <td>2024-04-20</td>
+                                 <td><span class="badge badge-warning">En Revisión (Decano)</span></td>
+                                 <td><a href="#" class="btn btn-sm btn-primary">Ver</a></td>
+                              </tr>
+                              <tr>
+                                 <td>Publicación: Impacto del Bilingüismo</td>
+                                 <td>Publicación</td>
+                                 <td>2024-03-15</td>
+                                 <td><span class="badge badge-danger">Rechazado</span></td>
+                                 <td><a href="#" class="btn btn-sm btn-primary">Ver</a></td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </div>
+
+                     <!-- Pestaña "Configuración" -->
+                     <div class="tab-pane" id="settings">
+                        <?php
+                        // Incluimos el formulario que ya teníamos, pero ahora dentro de una pestaña.
+                        // Para no repetir código, lo ideal sería mover este formulario a su propio parcial.
+                        // Por ahora, lo integramos directamente.
+                        ?>
+
+                        <?php
+                        $successMessage = \Phast\System\Core\Container::getInstance()->resolve(\Phast\System\Plugins\Session\SessionManager::class)->getFlashed('success');
+                        if ($successMessage):
+                           ?>
+                           <div class="alert alert-success alert-dismissible">
+                              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                              <h5><i class="icon fas fa-check"></i> ¡Éxito!</h5>
+                              <?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8') ?>
+                           </div>
+                        <?php endif; ?>
+
+                        <?php
+                        $validationErrors = \Phast\System\Core\Container::getInstance()->resolve(\Phast\System\Plugins\Session\SessionManager::class)->getFlashed('errors') ?? [];
+                        ?>
+
+                        <form class="form-horizontal" action="<?= route('profile.update') ?>" method="post">
+                           <?= csrf_field() ?>
+
+                           <div class="form-group row">
+                              <label for="inputEmail" class="col-sm-2 col-form-label">Email</label>
+                              <div class="col-sm-10">
+                                 <input type="email" class="form-control" id="inputEmail"
+                                    value="<?= htmlspecialchars($user->email, ENT_QUOTES, 'UTF-8') ?>" readonly>
+                              </div>
+                           </div>
+                           <div class="form-group row">
+                              <label for="inputName" class="col-sm-2 col-form-label">Nombre</label>
+                              <div class="col-sm-10">
+                                 <input type="text" class="form-control" id="inputName"
+                                    value="<?= htmlspecialchars($user->first_name . ' ' . $user->last_name, ENT_QUOTES, 'UTF-8') ?>"
+                                    readonly>
+                              </div>
+                           </div>
+
+                           <hr>
+                           <p class="text-muted">Información de contacto (editable)</p>
+
+                           <div class="form-group row">
+                              <label for="office_phone" class="col-sm-2 col-form-label">Teléfono Oficina</label>
+                              <div class="col-sm-10">
+                                 <input type="tel" name="office_phone" id="office_phone"
+                                    class="form-control <?= isset($validationErrors['office_phone']) ? 'is-invalid' : '' ?>"
+                                    value="<?= htmlspecialchars($user->office_phone ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                 <?php if (isset($validationErrors['office_phone'])): ?>
+                                    <span class="invalid-feedback d-block" role="alert">
+                                       <strong><?= htmlspecialchars($validationErrors['office_phone'][0], ENT_QUOTES, 'UTF-8') ?></strong>
+                                    </span>
+                                 <?php endif; ?>
+                              </div>
+                           </div>
+                           <div class="form-group row">
+                              <label for="personal_phone" class="col-sm-2 col-form-label">Teléfono Personal</label>
+                              <div class="col-sm-10">
+                                 <input type="tel" name="personal_phone" id="personal_phone"
+                                    class="form-control <?= isset($validationErrors['personal_phone']) ? 'is-invalid' : '' ?>"
+                                    value="<?= htmlspecialchars($user->personal_phone ?? '', ENT_QUOTES, 'UTF-8') ?>">
+                                 <?php if (isset($validationErrors['personal_phone'])): ?>
+                                    <span class="invalid-feedback d-block" role="alert">
+                                       <strong><?= htmlspecialchars($validationErrors['personal_phone'][0], ENT_QUOTES, 'UTF-8') ?></strong>
+                                    </span>
+                                 <?php endif; ?>
+                              </div>
+                           </div>
+
+                           <div class="form-group row">
+                              <div class="offset-sm-2 col-sm-10">
+                                 <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                              </div>
+                           </div>
+                        </form>
+
+                        <hr>
+
+                        <!-- Futura sección para cambiar contraseña -->
+                        <h5 class="mt-4">Cambiar Contraseña</h5>
+                        <form class="form-horizontal">
+                           <div class="form-group row">
+                              <label for="inputPassOld" class="col-sm-2 col-form-label">Contraseña Actual</label>
+                              <div class="col-sm-10">
+                                 <input type="password" class="form-control" id="inputPassOld"
+                                    placeholder="Contraseña Actual">
+                              </div>
+                           </div>
+                           <div class="form-group row">
+                              <label for="inputPassNew" class="col-sm-2 col-form-label">Nueva Contraseña</label>
+                              <div class="col-sm-10">
+                                 <input type="password" class="form-control" id="inputPassNew"
+                                    placeholder="Nueva Contraseña">
+                              </div>
+                           </div>
+                           <div class="form-group row">
+                              <label for="inputPassConfirm" class="col-sm-2 col-form-label">Confirmar Contraseña</label>
+                              <div class="col-sm-10">
+                                 <input type="password" class="form-control" id="inputPassConfirm"
+                                    placeholder="Confirmar Contraseña">
+                              </div>
+                           </div>
+                           <div class="form-group row">
+                              <div class="offset-sm-2 col-sm-10">
+                                 <button type="submit" class="btn btn-danger" disabled>Cambiar Contraseña</button>
+                              </div>
+                           </div>
+                        </form>
+
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</section>

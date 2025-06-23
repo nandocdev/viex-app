@@ -11,16 +11,15 @@ use Phast\App\Modules\Auth\Models\Entities\UserEntity;
 
 use Phast\App\Services\RateLimiter;
 
-class AuthController
-{
+class AuthController {
 
     public function __construct(
         protected AuthManager $auth,
         protected SessionManager $session,
         protected RateLimiter $limiter
-    ) {}
-    public function indexAction(Request $request, Response $response): Response
-    {
+    ) {
+    }
+    public function indexAction(Request $request, Response $response): Response {
         return $response->view('auth/index', [], 'auth');
     }
 
@@ -29,8 +28,7 @@ class AuthController
      * y autenticar al usuario.
      */
 
-    public function loginAction(Request $request, Response $response): Response
-    {
+    public function loginAction(Request $request, Response $response): Response {
 
         $throttleKey = strtolower($request->input('email')) . '|' . $request->getIp();
         // Verificar si se han superado los intentos
@@ -54,10 +52,12 @@ class AuthController
             $user = $this->auth->user();
 
             // 4. Cargar perfiles y permisos
-            $permissions = $this->loadUserPermissions($user->getAuthIdentifier());
+            // $permissions = $this->loadUserPermissions($user->getAuthIdentifier());
+
+            // print_r((array) $user);
 
             $this->session->set('user_id', $user->getAuthIdentifier());
-            $this->session->set('user_permissions', $permissions); // Guardamos la lista de permisos
+            // $this->session->set('user_permissions', $permissions); // Guardamos la lista de permisos
             $this->session->set('user_full_name', $user->first_name . ' ' . $user->last_name);
 
             // 5. Redirigir al dashboard (o a donde sea necesario)
@@ -68,15 +68,13 @@ class AuthController
             ->withError('Las credenciales proporcionadas no son correctas.');
     }
 
-    public function logoutAction(Request $request, Response $response): Response
-    {
+    public function logoutAction(Request $request, Response $response): Response {
         $this->auth->logout();
         $this->session->destroy(); // Asegura que la sesión se destruya completamente
         return $response->redirect('/auth');
     }
 
-    private function loadUserPermissions(int $userId): array
-    {
+    private function loadUserPermissions(int $userId): array {
         $permissionsQuery = "
             SELECT DISTINCT p.name
             FROM permissions p

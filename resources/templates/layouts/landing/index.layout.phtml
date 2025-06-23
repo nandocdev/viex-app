@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+
+@partial('header_landing')
+
+<body class="hold-transition layout-top-nav">
+   <div class="wrapper">
+
+      <!-- Barra de Navegación (Navbar) para Landing Page -->
+      @partial('navbar_landing')
+      <!-- Contenido de la Página -->
+      <div class="content-wrapper">
+         <?= $content ?>
+      </div>
+
+      <!-- Footer -->
+      @partial('footer_landing')
+
+   </div>
+   <!-- ./wrapper -->
+
+   <!-- REQUIRED SCRIPTS -->
+   <script src="<?= assets('plugins/jquery/jquery.min.js') ?>"></script>
+   <script src="<?= assets('plugins/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
+   <script src="<?= assets('dist/js/adminlte.min.js') ?>"></script>
+</body>
+
+</html>

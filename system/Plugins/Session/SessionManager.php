@@ -31,18 +31,18 @@ class SessionManager {
       if (session_status() === PHP_SESSION_NONE) {
          // Obtener configuraciones de las variables de entorno
          // Asegúrate de que estas variables estén definidas en tu archivo .env
-         $secure = (bool) ($_ENV['COOKIE_SECURE'] ?? false);
-         $sameSite = $_ENV['COOKIE_SAME_SITE'] ?? 'Lax';
+         $secure = (bool) config('session.secure', false);
+         $sameSite = config('session.same_site', 'Lax');
          // Convertir la vida útil de la sesión de minutos a segundos
-         $lifetime = (int) ($_ENV['SESSION_LIFETIME'] ?? 120) * 60;
-         $domain = $_ENV['APP_DOMAIN'] ?? ''; // Opcional: define APP_DOMAIN en .env si es necesario
+         $lifetime = (int) config('session.lifetime', 120) * 60;
+         $domain = config('session.domain', config('app.domain', null));
 
          // Configurar los parámetros de la cookie de sesión
          // Esto debe hacerse ANTES de session_start()
          session_set_cookie_params([
             'lifetime' => $lifetime,    // Duración de la cookie
             'path' => '/',              // Disponible en todo el dominio
-            'domain' => $domain,        // Dominio del que es válida la cookie
+            'domain' => $domain,        // Dominio del que es válida la cookie 
             'secure' => $secure,        // Solo enviar la cookie vía HTTPS
             'httponly' => true,         // La cookie solo es accesible vía HTTP, no JS
             'samesite' => $sameSite,    // Protección CSRF: 'Lax', 'Strict', 'None'

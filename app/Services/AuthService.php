@@ -19,8 +19,21 @@ use Phast\System\Database\Model; // Asumiendo que Model es la base para las enti
 class AuthService {
    protected const SESSION_USER_ID_KEY = 'user_id';
    protected ?AuthEntity $currentAuthUser = null;
-   
+
    public function __construct() {
       $this->loadAuthFromSession();
    }
+
+   public function loadAuthFromSession(): void {
+      // Cargar el usuario autenticado desde la sesión
+      $userId = $_SESSION[self::SESSION_USER_ID_KEY] ?? null;
+
+      if ($userId) {
+         // Asumimos que AuthEntity es un modelo que representa al usuario autenticado
+         $this->currentAuthUser = AuthEntity::find($userId);
+      } else {
+         $this->currentAuthUser = null;
+      }
+   }
+
 }

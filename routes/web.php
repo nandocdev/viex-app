@@ -14,5 +14,5 @@ foreach ($pathRoute as $routeFile) {
    }
 }
 Router::get('/', function (Request $request, Response $response) {
-   return $response->view('home/index', []);
+   return $response->view('home/index', [], 'landing');
 })->name('home.index');

@@ -1,10 +1,65 @@
-<div class="container mt-5">
-   <h1>Contacto</h1>
-   <hr>
-   <p class="lead">Para soporte técnico o consultas sobre el uso de la plataforma, puede contactarnos a través de los siguientes medios:</p>
-   <ul>
-      <li><strong>Correo Electrónico:</strong> soporte.viex@up.ac.pa</li>
-      <li><strong>Teléfono:</strong> (507) 523-XXXX</li>
-      <li><strong>Oficina:</strong> Vicerrectoría de Extensión, Edificio A, Campus Central.</li>
-   </ul>
+<!-- Encabezado de la página -->
+<div class="content-header">
+   <div class="container">
+      <div class="row mb-2">
+         <div class="col-sm-6">
+            <h1 class="m-0">Contacto</h1>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Contenido principal -->
+<div class="content">
+   <div class="container">
+      <div class="row">
+         <div class="col-md-6">
+            <div class="card card-primary card-outline">
+               <div class="card-body">
+                  <h4>Información de Contacto</h4>
+                  <p class="text-muted">Para soporte técnico o consultas sobre el uso de la plataforma, puede
+                     comunicarse con nosotros.</p>
+                  <address>
+                     <strong>Vicerrectoría de Extensión</strong><br>
+                     Edificio de la Colina, Campus Octavio Méndez Pereira<br>
+                     Panamá, República de Panamá<br>
+                     <br>
+                     <i class="fas fa-phone-alt"></i> <strong>Teléfono:</strong> (507) 523-5291<br>
+                     <i class="fas fa-envelope"></i> <strong>Email:</strong> <a
+                        href="mailto:soporte.viex@up.ac.pa">soporte.viex@up.ac.pa</a>
+                  </address>
+               </div>
+            </div>
+         </div>
+         <div class="col-md-6">
+            <div class="card">
+               <div class="card-body">
+                  <h4>Enviar un Mensaje</h4>
+                  <!-- En el futuro, este formulario enviará un email o creará un ticket -->
+                  <form action="#" method="post">
+                     <div class="form-group">
+                        <label for="inputName">Su Nombre</label>
+                        <input type="text" id="inputName" class="form-control" required>
+                     </div>
+                     <div class="form-group">
+                        <label for="inputEmail">Su Email</label>
+                        <input type="email" id="inputEmail" class="form-control" required>
+                     </div>
+                     <div class="form-group">
+                        <label for="inputSubject">Asunto</label>
+                        <input type="text" id="inputSubject" class="form-control" required>
+                     </div>
+                     <div class="form-group">
+                        <label for="inputMessage">Mensaje</label>
+                        <textarea id="inputMessage" class="form-control" rows="4" required></textarea>
+                     </div>
+                     <div class="form-group">
+                        <input type="submit" class="btn btn-primary" value="Enviar Mensaje">
+                     </div>
+                  </form>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
 </div>

@@ -23,6 +23,7 @@ class TemplateLoader {
    private string $viewsBasePath;
    private string $partialsBasePath; // Una ruta base para parciales globales/comunes
    const DS = DIRECTORY_SEPARATOR;
+   const EXT = '.phtml'; // Extensión de los archivos de plantilla
 
    public function __construct(private readonly string $basePath) {
 
@@ -50,7 +51,7 @@ class TemplateLoader {
     */
    public function loadLayoutPath(string $layoutName): string {
       // Asume un formato de archivo específico para layouts, ej. 'default/index.layout.phtml'
-      $layoutPath = $this->layoutsBasePath . $layoutName . self::DS . 'index.layout.phtml';
+      $layoutPath = $this->layoutsBasePath . $layoutName . self::DS . 'index.layout' . self::EXT;
 
       if (!file_exists($layoutPath)) {
          throw new InvalidArgumentException("El archivo de layout no existe: {$layoutPath}");
@@ -67,7 +68,7 @@ class TemplateLoader {
     */
    public function loadViewPath(string $viewName, ): string {
       $fullPath = $this->viewsBasePath;
-      $viewPath = $fullPath . $viewName . '.view.phtml';
+      $viewPath = $fullPath . $viewName . '.view' . self::EXT;
 
       if (!file_exists($viewPath)) {
          throw new InvalidArgumentException("El archivo de vista no existe: {$viewPath}");
@@ -89,7 +90,7 @@ class TemplateLoader {
       // Prioridad: buscar parciales relativos a la plantilla actual
       if (!empty($baseTemplatePath)) {
          $baseDir = dirname($baseTemplatePath);
-         $relativePartialPath = $baseDir . self::DS . 'partials' . $partialName . '.partial.phtml';
+         $relativePartialPath = $baseDir . self::DS . 'partials' . $partialName . '.partial' . self::EXT;
          if (file_exists($relativePartialPath)) {
             return $relativePartialPath;
          }
@@ -97,12 +98,26 @@ class TemplateLoader {
 
       // Segunda prioridad: buscar en una ruta de parciales global si está configurada
       if ($this->partialsBasePath) {
-         $globalPartialPath = $this->partialsBasePath . $partialName . '.partial.phtml';
+         $globalPartialPath = $this->partialsBasePath . $partialName . '.partial' . self::EXT;
          if (file_exists($globalPartialPath)) {
             return $globalPartialPath;
          }
       }
 
       throw new InvalidArgumentException("El archivo de partial no existe: {$partialName}. Buscado en: " . ($baseTemplatePath ? dirname($baseTemplatePath) . '/partials/' : '') . " y " . $this->partialsBasePath);
+   }
+
+   public function loadComponentPath(string $componentName, string $componentPath = ''): string {
+      $componentPath = '';
+      if (!empty($componentPath)) {
+         $fullPath = $this->viewsBasePath . $componentPath . self::DS . $componentName . '.component' . self::EXT;
+      } else {
+         $fullPath = $this->viewsBasePath . $componentName . '.component' . self::EXT;
+      }
+
+      if (!file_exists($fullPath)) {
+         throw new InvalidArgumentException("El archivo de componente no existe: {$fullPath}");
+      }
+      return $fullPath;
    }
 }

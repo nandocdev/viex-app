@@ -103,6 +103,7 @@ class PhpEngine implements ViewEngine {
    protected function processDirectives(string $content, string $baseTemplatePath = ''): string {
       $content = $this->extractPartials($content, $baseTemplatePath);
       // Si hay otras directivas como @component, se procesarían aquí
+      $content = $this->extractComponents($content, $baseTemplatePath);
       return $content;
    }
 
@@ -136,6 +137,32 @@ class PhpEngine implements ViewEngine {
          } catch (\Throwable $e) {
             // Capturar cualquier otra excepción durante el renderizado del parcial
             // $this->logger->critical("Error renderizando parcial {$partialName}: " . $e->getMessage());
+            return "";
+         }
+      }, $content);
+   }
+
+   protected function extractComponents(string $content, string $baseTemplatePath): string {
+      // Patrón para capturar @component('componentName', params[], 'type')
+      $pattern = "/@component\(([\'\"])(?<component>[^\'\"]+)\1(?:,\s*([\'\"])(?<params>[^\'\"]+)\3)?(?:,\s*([\'\"])(?<type>[^\'\"]+)\4)?\)/";
+      return preg_replace_callback($pattern, function ($matches) use ($baseTemplatePath) {
+         $componentName = $matches['component'];
+         $params = isset($matches['params']) ? json_decode($matches['params'], true) : [];
+         // $type = $matches['type'] ?? null; // Si se necesita un 'type' para el componente
+
+         try {
+            // Cargar la ruta del componente usando TemplateLoader
+            $componentPath = $this->templateLoader->loadComponentPath($componentName, $baseTemplatePath);
+
+            // Renderizar el componente. Asume que el componente accede a los datos actuales del DataHandler.
+            return $this->render($componentPath, array_merge($this->dataHandler->prepareDataForView(), $params));
+         } catch (InvalidArgumentException $e) {
+            // Opcional: logear el error
+            // $this->logger->error("Error al cargar componente: {$componentName}. " . $e->getMessage());
+            return ""; // Mensaje útil en desarrollo
+         } catch (\Throwable $e) {
+            // Capturar cualquier otra excepción durante el renderizado del componente
+            // $this->logger->critical("Error renderizando componente {$componentName}: " . $e->getMessage());
             return "";
          }
       }, $content);

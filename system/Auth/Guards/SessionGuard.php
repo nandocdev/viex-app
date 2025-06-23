@@ -80,6 +80,9 @@ class SessionGuard implements Guard {
 
    public function attempt(array $credentials = [], bool $remember = false): bool {
       $user = $this->userModelClass::where('email', '=', $credentials['email'])->first();
+      if ($user && !($user instanceof Authenticatable) && is_object($user)) {
+         $user = new $this->userModelClass((array) $user);
+      }
 
       if ($user && password_verify($credentials['password'], $user->getAuthPassword())) {
          $this->login($user, $remember);

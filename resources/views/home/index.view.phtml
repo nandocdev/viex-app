@@ -1,11 +1,55 @@
-<div class="container mt-5">
-   <div class="p-5 mb-4 bg-light rounded-3">
-      <div class="container-fluid py-5">
-         <h1 class="display-5 fw-bold">Bienvenido a VIEX</h1>
-         <p class="col-md-8 fs-4">La Plataforma de Registro y Certificación de Trabajos de Extensión de la Universidad de Panamá.</p>
-         <hr class="my-4">
-         <p>Desde aquí puede iniciar sesión para gestionar sus trabajos o consultar información pública sobre las iniciativas de extensión.</p>
-         <a class="btn btn-primary btn-lg" href="<?= route('auth.login.form') ?>" role="button">Iniciar Sesión</a>
+<!-- Sección Hero -->
+<div class="hero-section">
+   <div class="container text-center py-5">
+      <h1 class="display-4 font-weight-bold">Plataforma de Gestión de Extensión Universitaria</h1>
+      <p class="lead my-4">Centraliza, agiliza y certifica los trabajos de extensión de la Universidad de
+         Panamá. <br>Una herramienta moderna para un impacto real.</p>
+      <a href="<?= route('auth.login.form') ?>" class="btn btn-primary btn-lg px-4">Acceder a la Plataforma</a>
+      <a href="<?= route('home.public_projects') ?>" class="btn btn-secondary btn-lg px-4">Explorar Proyectos
+         Públicos</a>
+   </div>
+</div>
+
+<!-- Sección de Características -->
+<div class="content">
+   <div class="container py-5">
+      <div class="row text-center">
+         <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+               <div class="card-body">
+                  <div class="feature-icon">
+                     <i class="fas fa-paper-plane"></i>
+                  </div>
+                  <h3 class="card-title font-weight-bold">Registro Ágil</h3>
+                  <p class="card-text text-muted">Envía tus propuestas a través de formularios digitales,
+                     adjuntando evidencias de forma sencilla y rápida.</p>
+               </div>
+            </div>
+         </div>
+         <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+               <div class="card-body">
+                  <div class="feature-icon">
+                     <i class="fas fa-tasks"></i>
+                  </div>
+                  <h3 class="card-title font-weight-bold">Seguimiento Transparente</h3>
+                  <p class="card-text text-muted">Consulta el estado de tus trabajos en tiempo real, desde la
+                     revisión inicial hasta la aprobación final por VIEX.</p>
+               </div>
+            </div>
+         </div>
+         <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+               <div class="card-body">
+                  <div class="feature-icon">
+                     <i class="fas fa-file-pdf"></i>
+                  </div>
+                  <h3 class="card-title font-weight-bold">Certificación Digital</h3>
+                  <p class="card-text text-muted">Obtén y descarga tu certificado oficial en PDF, generado y
+                     validado automáticamente por el sistema.</p>
+               </div>
+            </div>
+         </div>
       </div>
    </div>
 </div>

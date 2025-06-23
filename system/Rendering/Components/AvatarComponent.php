@@ -1,12 +1,11 @@
 <?php
 /**
- * @package     system/Rendering
- * @subpackage  Components
- * @file        AvatarComponent
+ * @package     phast/system
+ * @subpackage  Rendering/Components
+ * @file        AvatarComponent.php
  * @author      Fernando Castillo <nando.castillo@outlook.com>
- * @date        2025-06-20 00:34:24
- * @version     1.0.0
- * @description
+ * @date        2025-06-20
+ * @version     1.1.0
  */
 
 declare(strict_types=1);
@@ -14,76 +13,74 @@ declare(strict_types=1);
 namespace Phast\System\Rendering\Components;
 
 class AvatarComponent {
-   private $text;
-   private $round;
-   private $size;
-   private $bg_color;
-   private $fg_color;
-   private $font;
-   private $font_size;
-   private $font_weight;
+   private string $text;
+   private bool $round = true;
+   private int $size = 100;
 
-   public function __construct($name, $surname) {
+   private string $bgColor = '#ffffff';
+   private string $fgColor = '#000000';
+   private string $font = 'Arial, sans-serif';
+   private int $fontSize = 40;
+   private string $fontWeight = 'bold';
+
+   public function __construct(string $name, string $surname) {
       $this->setText($name, $surname);
-      $this->round = true;
-      $this->size = 100;
-      $this->bg_color = '#ffffff';
-      $this->fg_color = '#000000';
-      $this->font = "Arial, sans-serif";
-      $this->font_size = 40;
-      $this->font_weight = 'bold';
+      $this->setSize();
    }
 
-   public function setText($name, $surname) {
+   public function setText(string $name, string $surname): void {
       $this->text = strtoupper(substr($name, 0, 1) . substr($surname, 0, 1));
    }
 
-   public function setRound($round) {
+   public function setRound(bool $round): void {
       $this->round = $round;
    }
 
-   public function setSize($size) {
+   public function setSize(int $size = 100): void {
+      if (!is_int($size) || $size <= 0) {
+         throw new \InvalidArgumentException("Size must be a positive integer.");
+      }
+
       $this->size = $size;
+      $minSize = 100;
+      $this->size = max($minSize, $size);
+
+      // El tamaño de la fuente será el 80% del tamaño de la imagen
+      $this->fontSize = (int) ($this->size * 0.75);
    }
 
-   public function setBackgroundColor($bg_color) {
-      $this->bg_color = $bg_color;
+   public function setBackgroundColor(string $bgColor): void {
+      $this->bgColor = $bgColor;
    }
 
-   public function setForegroundColor($fg_color) {
-      $this->fg_color = $fg_color;
+   public function setForegroundColor(string $fgColor): void {
+      $this->fgColor = $fgColor;
    }
 
-   public function setFont($font) {
+   public function setFont(string $font): void {
       $this->font = $font;
    }
 
-   public function setFontSize($font_size) {
-      $this->font_size = $font_size;
+   public function setFontSize(int $fontSize): void {
+      $this->fontSize = $fontSize;
    }
 
-   public function setFontWeight($font_weight) {
-      $this->font_weight = $font_weight;
+   public function setFontWeight(string $fontWeight): void {
+      $this->fontWeight = $fontWeight;
    }
 
-   public function generate() {
-      $svg = "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'";
-      $svg .= " width='" . $this->size . "px' height='" . $this->size . "px' viewBox='0 0 " . $this->size . " " . $this->size . "'";
-      $svg .= " version='1.1'>";
+   public function generate(): string {
+      $svg = [
+         "<svg xmlns='http://www.w3.org/2000/svg' width='{$this->size}' height='{$this->size}' viewBox='0 0 {$this->size} {$this->size}'>",
+         $this->round
+         ? "<circle fill='{$this->bgColor}' cx='" . ($this->size / 2) . "' cy='" . ($this->size / 2) . "' r='" . ($this->size / 2) . "' />"
+         : "<rect fill='{$this->bgColor}' width='{$this->size}' height='{$this->size}' />",
+         "<text x='" . ($this->size / 2) . "' y='" . ($this->size / 2) . "' " .
+         "fill='{$this->fgColor}' font-family='{$this->font}' font-size='{$this->fontSize}' font-weight='{$this->fontWeight}' " .
+         "text-anchor='middle' dominant-baseline='central'>{$this->text}</text>",
+         "</svg>"
+      ];
 
-      if ($this->round) {
-         // Generar un círculo con el color de fondo
-         $svg .= "<circle fill='" . $this->bg_color . "' cx='" . $this->size / 2 . "' cy='" . $this->size / 2 . "' r='" . $this->size / 2 . "' />";
-      } else {
-         // Generar un rectángulo con el color de fondo
-         $svg .= "<rect fill='" . $this->bg_color . "' width='" . $this->size . "' height='" . $this->size . "' />";
-      }
-
-      // Generar el texto del avatar en el centro del círculo o rectángulo
-      $svg .= "<text x='" . $this->size / 2 . "' y='" . $this->size / 2 . "' fill='" . $this->fg_color . "' font-family='" . $this->font . "' font-size='" . $this->font_size . "' font-weight='" . $this->font_weight . "' text-anchor='middle' alignment-baseline='central'>" . $this->text . "</text>";
-
-      $svg .= "</svg>";
-
-      return $svg;
+      return implode("\n", $svg);
    }
 }

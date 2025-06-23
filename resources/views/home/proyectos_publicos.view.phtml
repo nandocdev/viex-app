@@ -1,0 +1,103 @@
+<!-- Encabezado de la página -->
+<div class="content-header">
+   <div class="container">
+      <div class="row mb-2">
+         <div class="col-sm-6">
+            <h1 class="m-0">Proyectos de Extensión Públicos</h1>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Contenido principal -->
+<div class="content">
+   <div class="container">
+      <!-- Barra de Búsqueda -->
+      <div class="row">
+         <div class="col-12">
+            <div class="card">
+               <div class="card-body">
+                  <form action="#" method="get">
+                     <div class="row">
+                        <div class="col-md-5">
+                           <input type="search" class="form-control" placeholder="Buscar por título, palabra clave...">
+                        </div>
+                        <div class="col-md-4">
+                           <select class="form-control">
+                              <option selected disabled>Filtrar por Unidad Académica</option>
+                              <option>Facultad de Ingeniería de Sistemas</option>
+                              <option>Facultad de Derecho</option>
+                              <option>Centro Regional de Veraguas</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <button type="submit" class="btn btn-primary btn-block">Buscar</button>
+                        </div>
+                     </div>
+                  </form>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- Listado de Proyectos -->
+      <div class="row">
+         <?php // En el futuro, este bloque será un bucle `foreach ($projects as $project)` ?>
+
+         <!-- Tarjeta de Proyecto 1 (Ejemplo) -->
+         <div class="col-md-6 col-lg-4">
+            <div class="card card-primary card-outline">
+               <div class="card-body">
+                  <h5 class="card-title font-weight-bold">Programa de Alfabetización Digital para Adultos Mayores</h5>
+                  <p class="card-text text-muted mt-2"><strong>Proponente:</strong> Dr. Juan Pérez</p>
+                  <p class="card-text">Iniciativa para reducir la brecha digital en la comunidad, enseñando habilidades
+                     informáticas básicas a personas de la tercera edad.</p>
+                  <a href="#" class="btn btn-sm btn-primary">Ver Detalles</a>
+               </div>
+            </div>
+         </div>
+
+         <!-- Tarjeta de Proyecto 2 (Ejemplo) -->
+         <div class="col-md-6 col-lg-4">
+            <div class="card card-primary card-outline">
+               <div class="card-body">
+                  <h5 class="card-title font-weight-bold">Jornada de Reforestación y Conciencia Ambiental</h5>
+                  <p class="card-text text-muted mt-2"><strong>Proponente:</strong> Prof. Ana Rodríguez</p>
+                  <p class="card-text">Proyecto de servicio social que involucra a estudiantes en la siembra de árboles
+                     nativos en la cuenca del Canal.</p>
+                  <a href="#" class="btn btn-sm btn-primary">Ver Detalles</a>
+               </div>
+            </div>
+         </div>
+
+         <!-- Tarjeta de Proyecto 3 (Ejemplo) -->
+         <div class="col-md-6 col-lg-4">
+            <div class="card card-primary card-outline">
+               <div class="card-body">
+                  <h5 class="card-title font-weight-bold">Asesoría Legal Gratuita para Emprendedores</h5>
+                  <p class="card-text text-muted mt-2"><strong>Proponente:</strong> Facultad de Derecho y Ciencias
+                     Políticas</p>
+                  <p class="card-text">Asistencia técnica especializada para ayudar a nuevos emprendedores con la
+                     formalización de sus negocios.</p>
+                  <a href="#" class="btn btn-sm btn-primary">Ver Detalles</a>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- Paginación (Ejemplo) -->
+      <div class="row mt-3">
+         <div class="col-12 d-flex justify-content-center">
+            <nav>
+               <ul class="pagination">
+                  <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
+                  <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                  <li class="page-item"><a class="page-link" href="#">2</a></li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
+               </ul>
+            </nav>
+         </div>
+      </div>
+   </div>
+</div>
