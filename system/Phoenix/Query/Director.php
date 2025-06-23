@@ -85,6 +85,56 @@ final class Director {
    }
 
    /**
+    * Ejecuta una consulta SELECT nativa y devuelve una colección de entidades hidratadas.
+    *
+    * @template T of EntityInterface
+    * @param string $sql La consulta SQL nativa.
+    * @param array<int|string, mixed> $bindings Los bindings para la consulta.
+    * @param class-string<T> $entityClass La clase de la entidad a hidratar.
+    * @return array<T> Un array de objetos de entidad.
+    */
+   public function selectRaw(string $sql, array $bindings, string $entityClass): array {
+      $results = $this->adapter->rawQuery($sql, $bindings);
+
+      $entities = [];
+      foreach ($results as $row) {
+         // Reutilizamos el hydrator, ¡aquí está la magia!
+         $entities[] = $this->hydrator->hydrate($row, $entityClass);
+      }
+
+      return $entities;
+   }
+
+   /**
+    * Ejecuta una consulta SELECT nativa y devuelve la primera entidad hidratada.
+    *
+    * @template T of EntityInterface
+    * @param string $sql La consulta SQL nativa.
+    * @param array<int|string, mixed> $bindings Los bindings para la consulta.
+    * @param class-string<T> $entityClass La clase de la entidad a hidratar.
+    * @return ?T La entidad encontrada o null.
+    */
+   public function firstRaw(string $sql, array $bindings, string $entityClass): ?EntityInterface {
+      // Podemos añadir "LIMIT 1" si no está presente para optimizar,
+      // pero por simplicidad, lo dejamos así por ahora.
+      $results = $this->selectRaw($sql, $bindings, $entityClass);
+
+      return $results[0] ?? null;
+   }
+
+
+   /**
+    * Ejecuta una sentencia SQL nativa (INSERT, UPDATE, DELETE).
+    *
+    * @param string $sql La sentencia SQL nativa.
+    * @param array<int|string, mixed> $bindings Los bindings para la sentencia.
+    * @return int El número de filas afectadas.
+    */
+   public function statement(string $sql, array $bindings = []): int {
+      return $this->adapter->rawExecute($sql, $bindings);
+   }
+
+   /**
     * Inserta un nuevo registro en la base de datos a partir de una entidad.
     *
     * @param EntityInterface $entity La entidad a insertar.
@@ -106,7 +156,35 @@ final class Director {
       return $this->adapter->getLastInsertId();
    }
 
-   // Aquí irían los métodos update(), delete(), etc. que siguen un patrón similar.
+   /**
+    * Actualiza un registro en la base de datos a partir de una entidad existente.
+    *
+    * @param EntityInterface $entity La entidad con los datos actualizados.
+    * @return int El número de filas afectadas.
+    */
+   public function update(EntityInterface $entity): int {
+      $builder = $this->createBuilderForEntity($entity);
+      $values = $this->hydrator->dehydrate($entity);
+
+      // Suponemos que el builder ya tiene los WHERE necesarios (por PK)
+      $primaryKeyColumn = $this->getPrimaryKeyColumnName($entity);
+      $primaryKeyValue = $entity->getPrimaryKeyValue();
+
+      // Añadimos el WHERE por PK si no existe
+      if (!$builder->hasWhere($primaryKeyColumn)) {
+         $builder->where($primaryKeyColumn, '=', $primaryKeyValue);
+      }
+
+      $sql = $this->grammar->compileUpdate($builder, $values);
+
+      // Combina los bindings del SET y del WHERE
+      $whereBindings = $this->grammar->getSelectBindings($builder);
+      $updateBindings = array_merge(array_values($values), $whereBindings);
+
+      return $this->adapter->execute($sql, $updateBindings);
+   }
+
+   // Aquí irían los métodos delete(), etc. que siguen un patrón similar.
 
    /**
     * Crea un QueryBuilder básico para una entidad dada.

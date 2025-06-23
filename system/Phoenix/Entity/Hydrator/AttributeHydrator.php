@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Phoenix/Entity
  * @subpackage  Hydrator
@@ -8,6 +9,7 @@
  * @version     1.0.0
  * @description Implementación del hidratador que utiliza Atributos de PHP para el mapeo.
  */
+
 declare(strict_types=1);
 
 namespace Phast\System\Phoenix\Entity\Hydrator;
@@ -44,28 +46,38 @@ class AttributeHydrator implements HydratorInterface {
 
       $metadata = $this->getMetadata($entityClass);
 
+      // Crea una instancia usando el método de fábrica
       try {
          /** @var EntityInterface $entity */
-         $entity = (new ReflectionClass($entityClass))->newInstanceWithoutConstructor();
+         $entity = $entityClass::newInstanceFromData([], true);
       } catch (ReflectionException $e) {
          throw new HydrationException("No se pudo instanciar la entidad '{$entityClass}'. ¿Tiene un constructor público sin parámetros obligatorios?", 0, $e);
       }
 
+      // Obtener reflexión para acceder a métodos protegidos si es necesario
+      $reflection = new ReflectionClass($entity);
+      $setAttributeMethod = $this->getMethodReflection($reflection, 'setAttribute');
+      $syncOriginalMethod = $this->getMethodReflection($reflection, 'syncOriginal');
+
       foreach ($data as $columnName => $value) {
          if (isset($metadata['columnToPropertyMap'][$columnName])) {
             $propertyName = $metadata['columnToPropertyMap'][$columnName];
+            if (!property_exists($entity, $propertyName)) {
+               // Log temporal para depuración
+               error_log("Propiedad '$propertyName' no existe en " . get_class($entity));
+            }
             try {
-               // La asignación directa aprovechará la coerción de tipos de PHP 8+
-               // y lanzará TypeError si los tipos son incompatibles.
-               $entity->{$propertyName} = $value;
+               // Usar reflexión para llamar al método setAttribute
+               $setAttributeMethod->invoke($entity, $propertyName, $value);
             } catch (TypeError $e) {
-               throw new HydrationException("Error de tipo al hidratar '{$entityClass}::\${$propertyName}'. " . $e->getMessage(), 0, $e);
+               throw new HydrationException("Error al asignar el valor '$value' a la propiedad '$propertyName' de la entidad '{$entityClass}': " . $e->getMessage(), 0, $e);
             }
          }
       }
 
-      // Usamos el método de fábrica de la entidad para registrar que proviene de la base de datos.
-      return $entityClass::newInstanceFromData($entity->getAttributes(), true);
+      // Usar reflexión para llamar al método syncOriginal
+      $syncOriginalMethod->invoke($entity);
+      return $entity;
    }
 
    /**
@@ -126,5 +138,23 @@ class AttributeHydrator implements HydratorInterface {
     */
    private function toSnakeCase(string $input): string {
       return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $input));
+   }
+
+   /**
+    * Obtiene la reflexión de un método, ya sea público o protegido.
+    *
+    * @param \ReflectionClass $reflection
+    * @param string $methodName
+    * @return \ReflectionMethod
+    * @throws HydrationException
+    */
+   private function getMethodReflection(ReflectionClass $reflection, string $methodName): \ReflectionMethod {
+      if ($reflection->hasMethod($methodName)) {
+         $method = $reflection->getMethod($methodName);
+         $method->setAccessible(true); // Permite acceso a métodos protegidos
+         return $method;
+      }
+
+      throw new HydrationException("El método '{$methodName}' no existe en la clase '" . $reflection->getName() . "'");
    }
 }

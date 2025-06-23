@@ -68,4 +68,24 @@ interface AdapterInterface {
     * @return bool True si la reversión fue exitosa, false en caso contrario.
     */
    public function rollBack(): bool;
+
+   /**
+    * Ejecuta una consulta SQL nativa que devuelve un conjunto de resultados.
+    *
+    * @param string $sql La sentencia SQL nativa.
+    * @param array<int|string, mixed> $bindings Los valores para los parámetros de la consulta.
+    * @return array<int, array<string, mixed>> Un array de filas.
+    * @throws QueryException Si la consulta falla.
+    */
+   public function rawQuery(string $sql, array $bindings = []): array;
+
+   /**
+    * Ejecuta una sentencia SQL nativa que no devuelve un conjunto de resultados.
+    *
+    * @param string $sql La sentencia SQL nativa.
+    * @param array<int|string, mixed> $bindings Los valores para los parámetros de la sentencia.
+    * @return int El número de filas afectadas.
+    * @throws QueryException Si la sentencia falla.
+    */
+   public function rawExecute(string $sql, array $bindings = []): int;
 }

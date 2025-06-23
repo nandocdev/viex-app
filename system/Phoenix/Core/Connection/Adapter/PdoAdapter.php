@@ -33,11 +33,13 @@ class PdoAdapter implements AdapterInterface {
     */
    private PDO $pdo;
 
+
    /**
     * @param PDO $pdo Una instancia activa de la conexión PDO.
     */
    public function __construct(PDO $pdo) {
       $this->pdo = $pdo;
+
    }
 
    /**
@@ -97,5 +99,31 @@ class PdoAdapter implements AdapterInterface {
     */
    public function rollBack(): bool {
       return $this->pdo->rollBack();
+   }
+
+   /**
+    * {@inheritdoc}
+    */
+   public function rawQuery(string $sql, array $bindings = []): array {
+      try {
+         $statement = $this->pdo->prepare($sql);
+         $statement->execute($bindings);
+         return $statement->fetchAll(PDO::FETCH_ASSOC);
+      } catch (PDOException $e) {
+         throw new QueryException($sql, $bindings, $e);
+      }
+   }
+
+   /**
+    * {@inheritdoc}
+    */
+   public function rawExecute(string $sql, array $bindings = []): int {
+      try {
+         $statement = $this->pdo->prepare($sql);
+         $statement->execute($bindings);
+         return $statement->rowCount();
+      } catch (PDOException $e) {
+         throw new QueryException($sql, $bindings, $e);
+      }
    }
 }

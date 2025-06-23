@@ -150,8 +150,21 @@ class MySqlGrammar implements GrammarInterface {
    }
 
    protected function compileHavings(QueryBuilder $builder): ?string {
-      // La implementación sería muy similar a compileWheres. Se omite por brevedad.
-      return null;
+      if (empty($builder->havings)) {
+         return null;
+      }
+      $sql = [];
+      foreach ($builder->havings as $index => $having) {
+         $prefix = ($index === 0) ? '' : ($having['boolean'] . ' ');
+         $sql[] = $prefix . match ($having['type']) {
+            'Basic' => $this->wrap($having['column']) . ' ' . $having['operator'] . ' ?',
+            'In', 'NotIn' => $this->wrap($having['column']) .
+            ($having['type'] === 'In' ? ' IN ' : ' NOT IN ') .
+            '(' . $this->parameterize($having['values']) . ')',
+            default => ''
+         };
+      }
+      return 'HAVING ' . implode(' ', $sql);
    }
 
    // --- Métodos de Utilidad Específicos de MySQL ---

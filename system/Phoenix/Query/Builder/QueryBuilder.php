@@ -172,4 +172,22 @@ class QueryBuilder {
       $this->offset = $value > 0 ? $value : null;
       return $this;
    }
+
+   /**
+    * Verifica si ya existe una condición WHERE para una columna específica.
+    *
+    * @param string $column
+    * @return bool
+    */
+   public function hasWhere(string $column): bool {
+      foreach ($this->wheres as $where) {
+         if (
+            isset($where['column']) &&
+            $where['column'] === $column
+         ) {
+            return true;
+         }
+      }
+      return false;
+   }
 }

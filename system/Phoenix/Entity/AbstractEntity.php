@@ -66,13 +66,9 @@ abstract class AbstractEntity implements EntityInterface {
     */
    public static function newInstanceFromData(array $attributes, bool $isExisting = false): static {
       $entity = new static();
-      $entity->attributes = $attributes;
       $entity->exists = $isExisting;
-
-      if ($isExisting) {
-         $entity->syncOriginal();
-      }
-
+      // La población se hace fuera, en el Hydrator.
+      // El syncOriginal() también.
       return $entity;
    }
 
@@ -83,6 +79,8 @@ abstract class AbstractEntity implements EntityInterface {
    public function setDirector(Director $director): void {
       $this->director = $director;
    }
+
+
 
    // --- Métodos Mágicos para Acceso a Propiedades y Relaciones ---
 
@@ -170,7 +168,11 @@ abstract class AbstractEntity implements EntityInterface {
     * Sincroniza el estado 'original' con los atributos actuales.
     * Se llama después de cargar o guardar una entidad.
     */
-   protected function syncOriginal(): void {
+   public function syncOriginal(): void {
       $this->original = $this->attributes;
+   }
+
+   public function setAttribute(string $key, $value): void {
+      $this->attributes[$key] = $value;
    }
 }

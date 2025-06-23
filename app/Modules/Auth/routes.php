@@ -20,3 +20,15 @@ Router::group(['prefix' => 'profile', 'middleware' => ['Authenticate']], functio
    Router::post('/update', 'Auth\\Controllers\\ProfileController@updateProfileAction')->name('profile.update');
 
 });
+
+// Mostrar formulario para pedir el enlace de reseteo
+Router::get('/forgot-password', 'Auth\\Controllers\\ForgotPasswordController@showLinkRequestFormAction')->name('password.request');
+
+// Enviar el enlace de reseteo
+Router::post('/forgot-password', 'Auth\\Controllers\\ForgotPasswordController@sendResetLinkEmailAction')->name('password.email');
+
+// Mostrar el formulario para resetear la contraseña (con el token)
+Router::get('/reset-password/{token}', 'Auth\\Controllers\\ForgotPasswordController@showResetFormAction')->name('password.reset');
+
+// Procesar el reseteo de la contraseña
+Router::post('/reset-password', 'Auth\\Controllers\\ForgotPasswordController@resetPasswordAction')->name('password.update');

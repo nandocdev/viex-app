@@ -29,11 +29,16 @@ use InvalidArgumentException;
  * gestionar la creación de conexiones, promoviendo la extensibilidad.
  */
 class Connection implements ConnectionInterface {
+
+   private ?AdapterInterface $adapter = null;
+
    /**
     * Array de configuración para la conexión.
     * @var array<string, mixed>
     */
    private array $config;
+
+   private array $drivers = [];
 
    /**
     * @param array<string, mixed> $config La configuración de la base de datos.
@@ -43,6 +48,11 @@ class Connection implements ConnectionInterface {
          throw new InvalidArgumentException("El array de configuración de la base de datos no puede estar vacío.");
       }
       $this->config = $config;
+      $this->drivers = [
+         'pdo' => [$this, 'createPdoAdapter'],
+         // 'mysqli' => [$this, 'createMySqliAdapter'],
+      ];
+
    }
 
    /**
@@ -51,18 +61,35 @@ class Connection implements ConnectionInterface {
     * @return AdapterInterface
     * @throws ConnectionException Si el driver no es soportado o la conexión falla.
     */
+   // public function make(): AdapterInterface {
+
+   //    $driver = $this->config['driver'] ?? null;
+   //    if (!isset($this->drivers[$driver])) {
+   //       throw new ConnectionException("Driver no soportado: [{$driver}].");
+   //    }
+
+   //    if ($this->adapter !== null) {
+   //       return $this->adapter;
+   //    }
+
+   //    switch ($driver) {
+   //       case 'pdo':
+   //          $this->adapter = $this->createPdoAdapter();
+   //          return $this->adapter;
+   //       // Futuros drivers irían aquí:
+   //       // case 'mysqli':
+   //       //     return $this->createMySqliAdapter();
+   //       default:
+   //          throw new ConnectionException("Driver de base de datos no soportado: [{$driver}].");
+   //    }
+   // }
+
    public function make(): AdapterInterface {
       $driver = $this->config['driver'] ?? null;
-
-      switch ($driver) {
-         case 'pdo':
-            return $this->createPdoAdapter();
-         // Futuros drivers irían aquí:
-         // case 'mysqli':
-         //     return $this->createMySqliAdapter();
-         default:
-            throw new ConnectionException("Driver de base de datos no soportado: [{$driver}].");
+      if (!isset($this->drivers[$driver])) {
+         throw new ConnectionException("Driver no soportado: [{$driver}].");
       }
+      return call_user_func($this->drivers[$driver]);
    }
 
    /**
