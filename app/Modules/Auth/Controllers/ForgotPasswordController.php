@@ -15,7 +15,6 @@ namespace Phast\App\Modules\Auth\Controllers;
 
 use Phast\System\Http\Request;
 use Phast\System\Http\Response;
-use Phast\System\Database\DB;
 use Phast\App\Services\MailerService;
 use Phast\App\Modules\Auth\Models\Entities\UserEntity;
 use Carbon\Carbon; // Recomendado: composer require nesbot/carbon
