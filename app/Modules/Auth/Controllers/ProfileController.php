@@ -18,7 +18,7 @@ use Phast\System\Http\Request;
 use Phast\System\Http\Response;
 use Phast\System\Plugins\Session\SessionManager;
 use Phast\App\Modules\Auth\Models\Entities\UserEntity;
-
+use Phast\System\Rendering\Core\ViewData;
 class ProfileController {
    public function __construct(
       protected AuthManager $auth,
@@ -29,12 +29,26 @@ class ProfileController {
    public function showProfileAction(Request $request, Response $response): Response {
       /** @var UserEntity $user */
       $user = $this->auth->user();
+      // convierte el usuario a stdClass para pasarlo a la vista
+      // $user = (array) $user;
+
+      $data = new ViewData(
+         'Mi Perfil',
+         [],
+         $user, // Convertimos el usuario a stdClass para pasarlo a la vista
+         [
+            'pageTitle' => 'Mi Perfil',
+            'breadcrumb' => [
+               ['label' => 'Inicio', 'url' => route('home.index')],
+               ['label' => 'Mi Perfil', 'url' => route('profile.show')],
+            ],
+         ]
+      );
+      // return $response->json($user);
+
 
       // Pasamos el objeto de usuario completo a la vista
-      return $response->view('users/profile', [
-         'pageTitle' => 'Mi Perfil',
-         'user' => $user
-      ]);
+      return $response->view('users/profile', $data);
    }
 
    public function updateProfileAction(Request $request, Response $response): Response {

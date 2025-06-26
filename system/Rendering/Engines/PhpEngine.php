@@ -19,6 +19,7 @@ use Phast\System\Rendering\Core\DataHandler;
 use Phast\System\Rendering\Core\TemplateLoader;
 use InvalidArgumentException;
 
+
 class PhpEngine implements ViewEngine {
    private DataHandler $dataHandler;
    private TemplateLoader $templateLoader;

@@ -14,15 +14,23 @@ declare(strict_types=1);
 
 namespace Phast\System\Rendering;
 
+
+use Phast\System\Rendering\Core\ViewData;
+
 class View {
    private string $viewName;
    private string $layoutName;
    private array $data;
 
-   public function __construct(string $viewName, array $data = [],  string $layoutName = 'default') {
+   public function __construct(string $viewName, array|ViewData $data = [], string $layoutName = 'default') {
       $this->viewName = $viewName;
       $this->layoutName = $layoutName;
-      $this->data = $data;
+
+      if ($data instanceof ViewData) {
+         $this->data = $data->toArray();
+      } elseif (is_array($data)) {
+         $this->data = $data;
+      }
    }
 
    public function getViewName(): string {

@@ -18,6 +18,7 @@ use Phast\System\Core\Container;
 use Phast\System\Rendering\View;
 use Phast\System\Rendering\Render;
 use Phast\System\Plugins\Session\SessionManager;
+use Phast\System\Rendering\Core\ViewData;
 
 class Response {
    /**
@@ -112,7 +113,19 @@ class Response {
     * Prepara una respuesta de vista renderizada.
     * ¡Delega la renderización al servicio de Vistas del contenedor!
     */
-   public function view(string $viewName, array $data = [], string $layoutName = 'default'): self {
+   public function view(string $viewName, array|ViewData $data = [], string $layoutName = 'default'): self {
+
+      // Asegura que $data sea un array o ViewData
+      $viewDataArray = [];
+      if ($data instanceof ViewData) {
+         // Si es nuestro objeto ViewData, lo convertimos a un array.
+         $viewDataArray = $data->toArray();
+      } elseif (is_array($data)) {
+         // Si es un array, lo usamos directamente (mantenemos compatibilidad).
+         $viewDataArray = $data;
+      }
+      $data = $viewDataArray;
+
       // 1. Obtener el servicio de renderizado del contenedor.
       $renderer = Container::getInstance()->resolve(Render::class);
 

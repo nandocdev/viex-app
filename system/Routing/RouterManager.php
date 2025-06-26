@@ -38,6 +38,8 @@ class RouterManager {
    protected UrlGenerator $urlGenerator;
    protected RouteCache $cache;
 
+   protected ?array $currentRoute = null;
+
    /**
     * Constructor. Recibe todas sus dependencias a través de inyección.
     */
@@ -89,6 +91,8 @@ class RouterManager {
          throw new RouteNotFoundException("No route found for {$request->getMethod()} {$request->getPath()} with match parameters: " . json_encode($matched));
       }
 
+      $this->currentRoute = $matched['route']; // <--- Guardar la ruta encontrada
+
       $route = $matched['route'];
       $params = $matched['params'];
 
@@ -109,6 +113,10 @@ class RouterManager {
 
       // Despacha la petición a través de la pila de middleware
       return $this->dispatcher->dispatch($route['middleware'], $request, $finalHandler);
+   }
+
+   public function getCurrentRouteName(): ?string {
+      return $this->currentRoute['name'] ?? null;
    }
 
    /**

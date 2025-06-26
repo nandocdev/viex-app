@@ -1,64 +1,184 @@
 <div class="sidebar">
-   <!-- Sidebar user panel (optional) -->
-   <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-      <div class="image">
-         <!-- Carga avatar svg -->
-      </div>
-      <div class="info">
-         <a href="starter.html#" class="d-block">Alexander Pierce</a>
-      </div>
-   </div>
+    <!-- Panel de Usuario (Dinámico) -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="image">
+            <?php
+                // Carga dinámica del avatar
+                $fullName = \Phast\System\Core\Container::getInstance()->resolve(\Phast\System\Plugins\Session\SessionManager::class)->get('user_full_name', 'Usuario');
+                list($firstName, $lastName) = array_pad(explode(' ', $fullName, 2), 2, '');
+                $avatar = avatar($firstName, $lastName);
+                $avatar->setSize(34);
+                $avatar->setBackgroundColor('#ffffff');
+                $avatar->setForegroundColor('#343a40');
+                echo $avatar->generate();
+            ?>
+        </div>
+        <div class="info">
+            <a href="<?= route('profile.show') ?>" class="d-block"><?= htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') ?></a>
+        </div>
+    </div>
 
-   <!-- SidebarSearch Form -->
-   <div class="form-inline">
-      <div class="input-group" data-widget="sidebar-search">
-         <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
-         <div class="input-group-append">
-            <button class="btn btn-sidebar">
-               <i class="fas fa-search fa-fw"></i>
-            </button>
-         </div>
-      </div>
-   </div>
+    <!-- Buscador del Sidebar (Funcionalidad de AdminLTE) -->
+    <div class="form-inline">
+        <div class="input-group" data-widget="sidebar-search">
+            <input class="form-control form-control-sidebar" type="search" placeholder="Buscar en menú..." aria-label="Search">
+            <div class="input-group-append">
+                <button class="btn btn-sidebar">
+                    <i class="fas fa-search fa-fw"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
-   <!-- Sidebar Menu -->
-   <nav class="mt-2">
-      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-         <!-- Add icons to the links using the .nav-icon class
-               with font-awesome or any other icon font library -->
-         <li class="nav-item menu-open">
-            <a href="starter.html#" class="nav-link active">
-               <i class="nav-icon fas fa-tachometer-alt"></i>
-               <p>
-                  Starter Pages
-                  <i class="right fas fa-angle-left"></i>
-               </p>
-            </a>
-            <ul class="nav nav-treeview">
-               <li class="nav-item">
-                  <a href="starter.html#" class="nav-link active">
-                     <i class="far fa-circle nav-icon"></i>
-                     <p>Active Page</p>
-                  </a>
-               </li>
-               <li class="nav-item">
-                  <a href="starter.html#" class="nav-link">
-                     <i class="far fa-circle nav-icon"></i>
-                     <p>Inactive Page</p>
-                  </a>
-               </li>
-            </ul>
-         </li>
-         <li class="nav-item">
-            <a href="starter.html#" class="nav-link">
-               <i class="nav-icon fas fa-th"></i>
-               <p>
-                  Simple Link
-                  <span class="right badge badge-danger">New</span>
-               </p>
-            </a>
-         </li>
-      </ul>
-   </nav>
-   <!-- /.sidebar-menu -->
+    <!-- Menú del Sidebar (Dinámico) -->
+    <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            <?php
+                // 1. OBTENER PERMISOS DEL USUARIO DESDE LA SESIÓN
+                $userPermissions = \Phast\System\Core\Container::getInstance()->resolve(\Phast\System\Plugins\Session\SessionManager::class)->get('user_permissions', []);
+
+                // FUNCIÓN HELPER INTERNA PARA VERIFICAR PERMISOS
+                if (!function_exists('user_can')) {
+                    function user_can($permission, $userPermissions) {
+                        return in_array($permission, $userPermissions);
+                    }
+                }
+
+                // 2. DEFINIR LA ESTRUCTURA COMPLETA DEL MENÚ
+                $menuItems = [
+                    [
+                        'title' => 'Dashboard',
+                        'route' => 'dashboard.index',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'permission' => 'dashboard.view'
+                    ],
+                    [
+                        'title' => 'Mis Trabajos',
+                        'icon' => 'fas fa-folder',
+                        'permission' => 'work.view.own',
+                        'submenu' => [
+                            ['title' => 'Nuevo Trabajo', 'route' => 'work.create', 'icon' => 'far fa-circle', 'permission' => 'work.create'],
+                            ['title' => 'Consultar Mis Trabajos', 'route' => 'work.index.own', 'icon' => 'far fa-circle', 'permission' => 'work.view.own']
+                        ]
+                    ],
+                    [
+                        'title' => 'Bandeja de Entrada',
+                        'icon' => 'fas fa-inbox',
+                        'permission' => 'work.approve.coordinator',
+                        'submenu' => [
+                            ['title' => 'Revisión Coordinación', 'route' => 'inbox.coordinator', 'icon' => 'far fa-circle', 'permission' => 'work.approve.coordinator'],
+                            ['title' => 'Revisión Decanatura', 'route' => 'inbox.dean', 'icon' => 'far fa-circle', 'permission' => 'work.approve.dean'],
+                            ['title' => 'Certificación VIEX', 'route' => 'inbox.viex', 'icon' => 'far fa-circle', 'permission' => 'work.certify.viex']
+                        ]
+                    ],
+                    [
+                        'title' => 'Gestión de Trabajos',
+                        'icon' => 'fas fa-search',
+                        'permission' => 'work.view.unit',
+                        'submenu' => [
+                            ['title' => 'Trabajos de mi Unidad', 'route' => 'work.index.unit', 'icon' => 'far fa-circle', 'permission' => 'work.view.unit'],
+                            ['title' => 'Todos los Trabajos (UP)', 'route' => 'work.index.all', 'icon' => 'far fa-circle', 'permission' => 'work.view.all']
+                        ]
+                    ],
+                    [
+                        'title' => 'Reportes',
+                        'route' => 'reports.index',
+                        'icon' => 'fas fa-chart-pie',
+                        'permission' => 'report.generate.global'
+                    ],
+                    ['header' => 'ADMINISTRACIÓN'],
+                    [
+                        'title' => 'Gestión de Usuarios',
+                        'route' => 'admin.users.index',
+                        'icon' => 'fas fa-users-cog',
+                        'permission' => 'user.manage'
+                    ],
+                    [
+                        'title' => 'Gestión de Catálogos',
+                        'route' => 'admin.catalogs.index',
+                        'icon' => 'fas fa-book',
+                        'permission' => 'system.manage.catalogs'
+                    ],
+                ];
+
+                // 3. RENDERIZAR EL MENÚ DINÁMICAMENTE
+                foreach ($menuItems as $item) {
+                    if (isset($item['header'])) {
+                        // Renderizar un separador de sección si tiene el permiso para ver AL MENOS UN elemento debajo de él
+                        $canViewNext = false;
+                        $nextItems = array_slice($menuItems, array_search($item, $menuItems) + 1);
+                        foreach($nextItems as $nextItem) {
+                            if (!isset($nextItem['header']) && user_can($nextItem['permission'], $userPermissions)) {
+                                $canViewNext = true;
+                                break;
+                            }
+                        }
+                        if($canViewNext) echo '<li class="nav-header">' . strtoupper($item['header']) . '</li>';
+                        continue;
+                    }
+
+                    $canView = false;
+                    if (isset($item['submenu'])) {
+                        foreach ($item['submenu'] as $subItem) {
+                            if (user_can($subItem['permission'], $userPermissions)) {
+                                $canView = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        $canView = user_can($item['permission'], $userPermissions);
+                    }
+
+                    if (!$canView) continue;
+
+                    // Lógica para determinar si el menú o submenú está activo
+                    $isActive = false;
+                    $isMenuOpen = false;
+                    $routeNameForCheck = isset($item['route']) ? explode('.', $item['route'])[0] : (isset($item['submenu']) ? explode('.', $item['submenu'][0]['route'])[0] : '');
+
+                    if(isset($item['submenu'])) {
+                        foreach($item['submenu'] as $subItem) {
+                           if(isset($subItem['route']) && str_starts_with(current_route_name() ?? '', explode('.', $subItem['route'])[0])) {
+                                $isMenuOpen = true;
+                                break;
+                           }
+                        }
+                    } else {
+                        if(isset($item['route']) && str_starts_with(current_route_name() ?? '', explode('.', $item['route'])[0])) {
+                            $isActive = true;
+                        }
+                    }
+
+            ?>
+            <li class="nav-item <?= $isMenuOpen ? 'menu-is-opening menu-open' : '' ?>">
+                <a href="<?= isset($item['route']) ? route($item['route']) : '#' ?>" class="nav-link <?= ($isActive && !isset($item['submenu'])) ? 'active' : '' ?>">
+                    <i class="nav-icon <?= $item['icon'] ?>"></i>
+                    <p>
+                        <?= $item['title'] ?>
+                        <?php if (isset($item['submenu'])): ?><i class="right fas fa-angle-left"></i><?php endif; ?>
+                    </p>
+                </a>
+                <?php if (isset($item['submenu'])): ?>
+                    <ul class="nav nav-treeview">
+                        <?php foreach ($item['submenu'] as $subItem): ?>
+                            <?php if (user_can($subItem['permission'], $userPermissions)): 
+                                $isSubActive = (isset($subItem['route']) && (current_route_name() === $subItem['route']));
+                            ?>
+                            <li class="nav-item">
+                                <a href="<?= route($subItem['route']) ?>" class="nav-link <?= $isSubActive ? 'active' : '' ?>">
+                                    <i class="nav-icon <?= $subItem['icon'] ?>"></i>
+                                    <p><?= $subItem['title'] ?></p>
+                                </a>
+                            </li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+            </li>
+            <?php
+                } // Fin del bucle principal
+            ?>
+        </ul>
+    </nav>
+    <!-- /.sidebar-menu -->
 </div>
