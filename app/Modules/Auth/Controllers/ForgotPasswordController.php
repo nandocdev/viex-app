@@ -38,21 +38,23 @@ class ForgotPasswordController {
          // Generar token
          $token = bin2hex(random_bytes(32));
 
-         // Guardar en la BD
-         DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $email],
-            ['token' => $token, 'created_at' => now()] // now() asume Carbon
-         );
+         // Guardar en la BD [email, token, created_at]
+         DB::table('password_reset_tokens')->insert([
+            'email' => $email,
+            'token' => $token,
+            'created_at' => Carbon::now()
+         ]);
 
          // Renderizar la plantilla del correo
          $resetUrl = route('password.reset', ['token' => $token], true);
          $emailBody = (new Response())->view('emails/password_reset', [
             'resetUrl' => $resetUrl,
             'userName' => $user->first_name
-         ], null);
+         ], 'emails');
 
-         $this->mailer->send($email, 'Restablecer Contraseña - VIEX', $emailBody);
+         $this->mailer->send($email, 'Restablecer Contraseña - VIEX', $emailBody->getBody());
       }
+
 
       return $response->redirect(route('password.request'))
          ->withSuccess('Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña.');
