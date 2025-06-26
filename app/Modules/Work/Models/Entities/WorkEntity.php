@@ -9,7 +9,7 @@
  */
 declare(strict_types=1);
 
-namespace Phast\App\Modules\Workflow\Models\Entities;
+namespace Phast\App\Modules\Work\Models\Entities;
 
 use Phast\System\Database\Model;
 // TODO: Importa las interfaces necesarias, como Authenticatable si es un modelo de usuario.
@@ -24,7 +24,7 @@ use Phast\System\Database\Model;
  * @property-read \DateTime $created_at
  * @property-read \DateTime $updated_at
  */
-class WorkflowEntity extends Model {
+class WorkEntity extends Model {
     //--------------------------------------------------------------------------
     // SECCIÓN 1: CONFIGURACIÓN DEL ORM Y LA BASE DE DATOS
     //--------------------------------------------------------------------------
